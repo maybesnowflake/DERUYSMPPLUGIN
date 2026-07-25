@@ -23,15 +23,15 @@ import java.util.List;
  */
 public class HornCommand implements CommandExecutor, TabCompleter {
 
-    private static final MusicInstrument[] INSTRUMENTS = {
-            MusicInstrument.PONDER,  // 1
-            MusicInstrument.SING,    // 2
-            MusicInstrument.SEEK,    // 3
-            MusicInstrument.FEEL,    // 4
-            MusicInstrument.ADMIRE,  // 5
-            MusicInstrument.CALL,    // 6
-            MusicInstrument.YEARN,   // 7
-            MusicInstrument.DREAM    // 8
+ private static final MusicInstrument[] INSTRUMENTS = {
+            MusicInstrument.PONDER_GOAT_HORN,
+            MusicInstrument.SING_GOAT_HORN,
+            MusicInstrument.SEEK_GOAT_HORN,
+            MusicInstrument.FEEL_GOAT_HORN,
+            MusicInstrument.ADMIRE_GOAT_HORN,
+            MusicInstrument.CALL_GOAT_HORN,
+            MusicInstrument.YEARN_GOAT_HORN,
+            MusicInstrument.DREAM_GOAT_HORN
     };
 
     private final DeruyPlugin plugin;
