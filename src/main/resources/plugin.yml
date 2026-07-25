@@ -1,0 +1,102 @@
+name: DeruyPlugin
+version: '1.0.0'
+main: com.deruy.plugin.DeruyPlugin
+api-version: '1.21'
+author: Fsixel
+softdepend: [WorldGuard, LuckPerms, voicechat]
+
+commands:
+  lifesteal:
+    description: LifeSteal 시스템 관리 (toggle, status, recipe additem)
+    usage: /<command> toggle|status|recipe additem <name> <slot> <material>
+    permission: deruy.lifesteal.admin
+  devent:
+    description: 등록된 이벤트를 이름으로 시작/종료/조회
+    usage: /<command> start|stop|list <name>
+    permission: deruy.event.admin
+  koth:
+    description: KOTH 거점점령 이벤트 관리 (다중구역 지원)
+    usage: /<command> on|off|start|stop|status|zones|setregion <id> 1|2|removezone <id>|time <초>
+    permission: deruy.koth.admin
+  superkoth:
+    description: SuperKOTH 거점점령 이벤트 관리 (KOTH와 동일작동, 완전 독립)
+    usage: /<command> on|off|start|stop|status|zones|setregion <id> 1|2|removezone <id>|time <초>
+    permission: deruy.koth.admin
+  bingo:
+    description: 빙고 이벤트 관리
+    usage: /<command> team <player> <team>|start|stop|excludeitem <material>|excludebiome <biome>
+    permission: deruy.bingo.admin
+  bounty:
+    description: 바운티 이벤트 관리
+    usage: /<command> pair <p1> <p2>|unpair <player>|random|cleartarget|start|stop
+    permission: deruy.bounty.admin
+  supplydrop:
+    description: 일반 서플라이드랍 관리
+    usage: /<command> start|stop|force|setregion 1|2
+    permission: deruy.supplydrop.admin
+  supersupplydrop:
+    description: 슈퍼 서플라이드랍 관리
+    usage: /<command> start|stop|force|setregion 1|2
+    permission: deruy.supplydrop.admin
+  deruytime:
+    description: 서버가 인식하는 현재 현실시간 확인
+    usage: /<command>
+    permission: deruy.time.view
+  combat:
+    description: 지정 플레이어에게 수동으로 컴벳태그 부여
+    usage: /<command> <player> <초>
+    permission: deruy.combat.admin
+  autotune:
+    description: 투명화 유저 대상 보이스챗 오토튠(피치 다운) 이펙트 온오프
+    usage: /<command> on|off|status
+    permission: deruy.autotune.admin
+  killlog:
+    description: 투명 상태 킬러 이름을 킬로그에서 노이즈 문자로 표시할지 온오프
+    usage: /<command> on|off|status
+    permission: deruy.killlog.admin
+  pvp:
+    description: 역할별 PVP 상태를 시간제한으로 변경
+    usage: /<command> <역할 [역할...]|ALL> on|off [시간]
+    permission: deruy.pvp.admin
+  voucher:
+    description: 상품권 아이템 지급 (관리자용)
+    usage: /<command> give <player> <1|2> [개수]
+    permission: deruy.voucher.admin
+  horn:
+    description: 소실의 저주가 인첸트된 염소뿔 획득 (허용된 역할만)
+    usage: /<command> <개수 1~8>
+    permission: deruy.horn.use
+  deruyreload:
+    description: config.yml을 재시작 없이 다시 불러옴
+    usage: /<command>
+    permission: deruy.reload.admin
+
+permissions:
+  deruy.lifesteal.admin:
+    default: op
+  deruy.event.admin:
+    default: op
+  deruy.koth.admin:
+    default: op
+  deruy.bingo.admin:
+    default: op
+  deruy.bounty.admin:
+    default: op
+  deruy.supplydrop.admin:
+    default: op
+  deruy.time.view:
+    default: true
+  deruy.combat.admin:
+    default: op
+  deruy.autotune.admin:
+    default: op
+  deruy.killlog.admin:
+    default: op
+  deruy.pvp.admin:
+    default: op
+  deruy.voucher.admin:
+    default: op
+  deruy.horn.use:
+    default: true
+  deruy.reload.admin:
+    default: op
