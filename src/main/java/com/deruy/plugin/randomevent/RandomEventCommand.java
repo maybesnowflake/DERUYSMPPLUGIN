@@ -1,0 +1,7 @@
+package com.deruy.plugin.randomevent;
+import org.bukkit.command.*;import java.util.*;
+public final class RandomEventCommand implements TabExecutor{
+ private final RandomEventManager m;public RandomEventCommand(RandomEventManager m){this.m=m;}
+ public boolean onCommand(CommandSender s,Command c,String l,String[]a){String sub=a.length==0?"status":a[0].toLowerCase();boolean view=List.of("status","list").contains(sub);if(!s.hasPermission(view?"deruy.randomevent.view":"deruy.randomevent.admin")){s.sendMessage("§c권한이 없습니다.");return true;}switch(sub){case"start"->m.startScheduler();case"stop"->m.stopScheduler();case"force"->{if(a.length<2){s.sendMessage("§c/randomevent force <이벤트>");break;}try{m.start(RandomEventManager.Type.valueOf(a[1].toUpperCase()));}catch(Exception x){s.sendMessage("§c존재하지 않는 이벤트입니다.");}}case"status"->s.sendMessage("§c랜덤 이벤트: "+(m.getActive()==null?"§7없음":"§e"+m.getActive())+" §7/ 예약 "+m.isSchedulerEnabled());case"list"->s.sendMessage("§e"+String.join(", ",Arrays.stream(RandomEventManager.Type.values()).map(Enum::name).toList()));default->s.sendMessage("§e/randomevent start|stop|force|status|list");}return true;}
+ public List<String> onTabComplete(CommandSender s,Command c,String l,String[]a){if(a.length==1)return List.of("status","list","start","stop","force").stream().filter(x->x.startsWith(a[0].toLowerCase())).toList();if(a.length==2&&a[0].equalsIgnoreCase("force"))return Arrays.stream(RandomEventManager.Type.values()).map(Enum::name).filter(x->x.startsWith(a[1].toUpperCase())).toList();return List.of();}
+}
