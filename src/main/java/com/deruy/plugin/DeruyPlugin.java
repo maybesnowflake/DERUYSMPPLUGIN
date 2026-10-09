@@ -324,7 +324,7 @@ public class DeruyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (transportManager != null) transportManager.stop();
+        if (transportManager != null) transportManager.shutdown();
         if (heartAuditLog != null) heartAuditLog.close();
         if (kothManager != null && kothManager.isRunning()) kothManager.stop();
         if (superKothManager != null && superKothManager.isRunning()) superKothManager.stop();

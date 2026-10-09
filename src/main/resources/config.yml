@@ -138,6 +138,9 @@ voucher:
   open-volume: 1.0
   open-pitch: 1.0
   tier1:
+    open-sound: 'minecraft:item.goat_horn.sound.0'
+    open-volume: 1.0
+    open-pitch: 1.0
     name: '&a&l교환권 [티어 I]'
     custom-model-data: 1101
     reward-items:
@@ -148,6 +151,9 @@ voucher:
     - HEART:0.2
     - NETHERITE_INGOT:0.1
   tier2:
+    open-sound: 'minecraft:item.goat_horn.sound.0'
+    open-volume: 1.0
+    open-pitch: 0.8
     name: '&5&l교환권 [티어 II]'
     custom-model-data: 1102
     reward-items:
@@ -454,6 +460,8 @@ question-time:
 
 # 한 번에 한 이벤트만 실행되어 상충 규칙이 겹치지 않음
 random-events:
+  roulette-style: GUI
+  roulette-seconds: 5
   enabled: false
   interval-seconds:
     min: 900

@@ -32,8 +32,8 @@ public class VoucherListener implements Listener {
 
         Player player = event.getPlayer();
         item.setAmount(item.getAmount() - 1);
-        player.playSound(player.getLocation(), plugin.getConfig().getString("voucher.open-sound", "minecraft:item.goat_horn.sound.0"),
-                (float) plugin.getConfig().getDouble("voucher.open-volume", 1.0), (float) plugin.getConfig().getDouble("voucher.open-pitch", 1.0));
+        player.playSound(player.getLocation(), plugin.getConfig().getString("voucher.tier" + tier + ".open-sound", plugin.getConfig().getString("voucher.open-sound", "minecraft:item.goat_horn.sound.0")),
+                (float) plugin.getConfig().getDouble("voucher.tier" + tier + ".open-volume", plugin.getConfig().getDouble("voucher.open-volume", 1.0)), (float) plugin.getConfig().getDouble("voucher.tier" + tier + ".open-pitch", plugin.getConfig().getDouble("voucher.open-pitch", 1.0)));
 
         List<String> rewardEntries = plugin.getConfig().getStringList("voucher.tier" + tier + ".reward-items");
         var items = plugin.getSupplyChestRegistry().rollRewards(rewardEntries, plugin.getLogger());

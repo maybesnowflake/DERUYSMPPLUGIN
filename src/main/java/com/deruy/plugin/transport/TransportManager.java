@@ -19,6 +19,7 @@ public final class TransportManager implements Listener {
     private WagonModel model;
     private final TransportLoot loot;
     private final TransportRaid raid;
+    private final TransportRewards rewards;
     private boolean railMode;
     public static final String POINT_ROUTE="points";
     private Map<RailPath.Cell,org.bukkit.block.data.Rail.Shape> railShapes=Map.of();
@@ -34,10 +35,10 @@ public final class TransportManager implements Listener {
         this.plugin=plugin;file=new File(plugin.getDataFolder(),"transport-routes.yml");
         routes=new YamlConfiguration();
         if(file.exists())try{routes.load(file);}catch(Exception e){throw new IOException("노선 파일 오류",e);}
-        model=new WagonModel(plugin);loot=new TransportLoot(plugin);raid=new TransportRaid(plugin,this,loot);
+        model=new WagonModel(plugin);loot=new TransportLoot(plugin);rewards=new TransportRewards(plugin);raid=new TransportRaid(plugin,this,loot,rewards);rewards.onDone(id->{if(raid.awaiting(id))stop();});
         for(World w:Bukkit.getWorlds())for(Chunk c:w.getLoadedChunks())cleanup(c);
     }
-    public void registerGameListeners(){Bukkit.getPluginManager().registerEvents(loot,plugin);Bukkit.getPluginManager().registerEvents(raid,plugin);}
+    public void registerGameListeners(){Bukkit.getPluginManager().registerEvents(loot,plugin);Bukkit.getPluginManager().registerEvents(raid,plugin);Bukkit.getPluginManager().registerEvents(rewards,plugin);}
     public Location currentLocation(){return current==null?null:current.clone();}
     public void setRailPoint(String id,String which,Location feet) throws IOException {
         editable();String b=base(id);if(!routes.contains(b))throw new IllegalArgumentException("먼저 /transport create "+id);
@@ -66,7 +67,7 @@ public final class TransportManager implements Listener {
         var rails=RailPath.inWorld(at.getWorld());for(int y=at.getBlockY();y>=at.getBlockY()-1;y--){var c=new RailPath.Cell(at.getBlockX(),y,at.getBlockZ());var shape=railShapes.get(c);if(shape!=null)return shape==rails.shape(c);}return false;
     }
     public boolean running(){return runningRoute!=null;}
-    public String status(){return running()?runningRoute+(railMode?" → 레일 도착점"+raid.status():" → 지점 "+legs.get(legIndex).destination+raid.status())+(dwell>0?" (정차 중)":" (운송 중)"):displays.isEmpty()?"대기 중":"모델 미리보기 중";}
+    public String status(){return running()?runningRoute+(railMode?" → 레일 도착점"+raid.status():" → 지점 "+legs.get(legIndex).destination+raid.status())+(dwell>0?" (정차 중)":" (운송 중)"):raid.awaiting()?"도착 보상 수령 대기 중":displays.isEmpty()?"대기 중":"모델 미리보기 중";}
     public Set<String> routes(){var s=routes.getConfigurationSection("routes");return s==null?Set.of():s.getKeys(false);}
     private String base(String id){if(!id.matches("[a-zA-Z0-9_-]{1,40}"))throw new IllegalArgumentException("노선 이름은 영문·숫자·_·- 1~40자입니다.");return "routes."+id;}
     private void editable(){if(running())throw new IllegalArgumentException("운송을 stop 한 뒤 노선을 수정하세요.");}
@@ -128,7 +129,7 @@ public final class TransportManager implements Listener {
             if(elapsed==leg.ticks){Bukkit.broadcastMessage("§c♥ [하트 운송전] §e구역 "+leg.destination+"에 도착했습니다.");dwell=leg.waitTicks;if(dwell==0){if(legIndex==legs.size()-1)arrive();else{legIndex++;elapsed=0;}}}
         }catch(Exception e){plugin.getLogger().severe("운송 중단: "+e.getMessage());stop();}
     }
-    private void arrive(){raid.clear();railMode=false;railShapes=Map.of();Bukkit.broadcastMessage("§c♥ [하트 운송전] §a운송이 완료되었습니다.");runningRoute=null;if(task!=null){task.cancel();task=null;} // Keep the model until remove/next preview.
+    private void arrive() throws IOException {raid.arrive(current);railMode=false;railShapes=Map.of();Bukkit.broadcastMessage("§c♥ [하트 운송전] §a운송이 완료되었습니다.");runningRoute=null;if(task!=null){task.cancel();task=null;} // Keep the model until remove/next preview.
     }
     public void preview(Location where){if(running())throw new IllegalArgumentException("운송을 먼저 stop 하세요.");stop();Location l=where.clone();l.setPitch(0);spawn(l);}
     private void spawn(Location at){try{hold(at);displays.addAll(model.spawn(at));current=at.clone();}catch(RuntimeException e){stop();throw e;}}
@@ -138,6 +139,7 @@ public final class TransportManager implements Listener {
     }
     public void reloadModel() throws IOException {if(running())throw new IllegalArgumentException("운송을 먼저 stop 하세요.");WagonModel candidate=new WagonModel(plugin);stop();model=candidate;}
     public void stop(){raid.clear();railMode=false;railShapes=Map.of();if(task!=null){task.cancel();task=null;}runningRoute=null;displays.forEach(Entity::remove);displays.clear();for(Chunk c:tickets)c.removePluginChunkTicket(plugin);tickets.clear();current=null;}
+    public void shutdown(){stop();rewards.shutdown();}
     public int entityCount(){return displays.size();}
     private void cleanup(Chunk c){for(Entity e:c.getEntities())if(e.getScoreboardTags().contains(WagonModel.TAG)&&!raid.owns(e.getUniqueId())&&displays.stream().noneMatch(d->d.getUniqueId().equals(e.getUniqueId())))e.remove();}
     @EventHandler public void onChunkLoad(ChunkLoadEvent event){cleanup(event.getChunk());}
