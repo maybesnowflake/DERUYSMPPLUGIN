@@ -52,18 +52,28 @@ public final class RandomEventManager implements Listener {
 
     @EventHandler(priority=EventPriority.HIGH,ignoreCancelled=true) public void damage(EntityDamageByEntityEvent e){
         Player p=attacker(e.getDamager());
-        if(e.getDamager() instanceof TNTPrimed&&on(Type.TNT_DOUBLE_DAMAGE))e.setDamage(e.getDamage()*2);
+        if(e.getDamager() instanceof TNTPrimed&&on(Type.TNT_DOUBLE_DAMAGE))multiplyFinalDamage(e,2);
         if(p==null)return;
         if(on(Type.MACE_BAN)&&weapon(p,Material.MACE)){deny(e,p,"철퇴를 사용할 수 없습니다.");return;}
-        if(on(Type.MACE_DOUBLE_DAMAGE)&&weapon(p,Material.MACE))e.setDamage(e.getDamage()*2);
+        if(on(Type.MACE_DOUBLE_DAMAGE)&&e.getDamager() instanceof Player&&weapon(p,Material.MACE))multiplyFinalDamage(e,2);
         if(on(Type.COUNTERATTACK)&&p.getHealth()<=18)e.setDamage(e.getDamage()*1.5);
         if(on(Type.LIFESTEAL)){double heal=Math.min(p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue(),p.getHealth()+e.getFinalDamage()*0.2);p.setHealth(heal);}
-        if(on(Type.POISON_HIT)&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.POISON,100,0));
-        if(on(Type.PROJECTILE_WITHER)&&e.getDamager() instanceof Projectile&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.WITHER,100,0));
+        if(on(Type.POISON_HIT)&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.POISON,100,1));
+        if(on(Type.PROJECTILE_WITHER)&&e.getDamager() instanceof Projectile&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.WITHER,100,1));
         if(on(Type.SWORD_SHIELD_BREAK)&&e.getDamager() instanceof Player&&suffix(p,"_SWORD")&&e.getEntity() instanceof Player victim&&victim.isBlocking()){victim.clearActiveItem();victim.setCooldown(Material.SHIELD,100);victim.getWorld().playSound(victim.getLocation(),Sound.ITEM_SHIELD_BREAK,.8f,1f);}
-        if(on(Type.AXE_CRIT_SLOW)&&e.getDamager() instanceof Player&&suffix(p,"_AXE")&&e.isCritical()&&e.getFinalDamage()>0&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,60,0));
+        if(on(Type.AXE_CRIT_SLOW)&&e.getDamager() instanceof Player&&suffix(p,"_AXE")&&e.isCritical()&&e.getFinalDamage()>0&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,140,2));
         if(on(Type.KILL_INVISIBILITY))p.removePotionEffect(PotionEffectType.INVISIBILITY);
         if(on(Type.MACE_SHOCKWAVE)&&weapon(p,Material.MACE))shockwave(p,e.getEntity());
+    }
+    /** Scale health damage after existing mitigation, without recomputing armor from a larger raw hit. */
+    @SuppressWarnings("deprecation")
+    static void multiplyFinalDamage(EntityDamageEvent event,double multiplier){
+        double finalDamage=event.getFinalDamage();
+        if(!Double.isFinite(finalDamage)||finalDamage<=0)return;
+        double base=event.getDamage(EntityDamageEvent.DamageModifier.BASE);
+        // This overload changes BASE only. Armor/resistance/protection/absorption amounts stay intact.
+        // New final = (base + final*(multiplier-1)) + original modifiers = old final*multiplier.
+        event.setDamage(EntityDamageEvent.DamageModifier.BASE,base+finalDamage*(multiplier-1));
     }
     private void shockwave(Player attacker,Entity target){double radius=plugin.getConfig().getDouble("random-events.mace-shockwave-radius",4);for(Entity near:target.getNearbyEntities(radius,radius,radius))if(near instanceof Player hit&&!hit.equals(attacker)){hit.addPotionEffect(new PotionEffect(PotionEffectType.INSTANT_DAMAGE,1,1));hit.setVelocity(hit.getLocation().toVector().subtract(target.getLocation().toVector()).normalize().multiply(1.2).setY(.5));}target.setVelocity(target.getVelocity().add(target.getLocation().toVector().subtract(attacker.getLocation().toVector()).normalize().multiply(1.2).setY(.5)));}
 

@@ -460,8 +460,10 @@ question-time:
 
 # 한 번에 한 이벤트만 실행되어 상충 규칙이 겹치지 않음
 random-events:
-  roulette-style: GUI
+  roulette-style: CAMERA
   roulette-seconds: 5
+  # 아이템이 한 칸 지나가는 간격: 2틱(0.1초) 또는 4틱(0.2초)
+  roulette-step-ticks: 2
   enabled: false
   interval-seconds:
     min: 900
@@ -506,20 +508,20 @@ random-events:
     SHIELD_BAN: '방패 사용 금지'
     TOTEM_BAN: '토템 사용 금지'
     POTION_BAN: '포션 사용 금지 및 기존 효과 제거'
-    POISON_HIT: '공격 적중 시 독'
+    POISON_HIT: '공격 적중 시 독 II'
     DOUBLE_DROPS: '자연 블록·몹 드롭 2배'
     MACE_BAN: '철퇴 사용 금지'
     STRENGTH_III: '상시 힘 III'
     KILL_DROP: '처치 시 추가 아이템'
     CROP_REWARD: '다 자란 작물 추가 보상'
     SWORD_SHIELD_BREAK: '검으로 방패 무력화'
-    AXE_CRIT_SLOW: '도끼 풀차징 치명타 시 구속 I 3초'
+    AXE_CRIT_SLOW: '도끼 풀차징 치명타 시 구속 III 7초'
     TNT_DOUBLE_DAMAGE: 'TNT 피해 2배'
     PROJECTILE_BAN: '투사체 금지'
     KILL_INVISIBILITY: '처치 시 투명화, 공격하면 해제'
     KILL_VOUCHER: '처치 시 상품권 드롭'
     MACE_DOUBLE_DAMAGE: '철퇴 피해 2배'
-    PROJECTILE_WITHER: '투사체 적중 시 위더'
+    PROJECTILE_WITHER: '투사체 적중 시 위더 II'
     COBWEB_BAN: '거미줄 설치 금지'
     LIFESTEAL: '가한 피해의 20% 흡혈'
     COUNTERATTACK: '체력 18 이하 공격력 1.5배'
@@ -549,3 +551,32 @@ risk-contracts:
       amount: 200
       time-seconds: 180
       reward-items: ['VOUCHER:1:1.0:2']
+
+# 열차 설정: 아래 항목은 transport-game.yml의 동일 항목보다 우선합니다.
+# /deruyreload 후 다음 /transport start부터 적용됩니다.
+transport:
+  # 20 = 하트 10칸. 범위: 1~1,000,000
+  health: 200
+  # 공격으로 열차를 파괴했을 때 흩어지는 내용물. 총합 1~512개.
+  # HEART:수량 / MATERIAL:수량 / VOUCHER:티어:수량
+  loot:
+    - HEART:16
+    - GOLD_INGOT:32
+    - DIAMOND:24
+    - EMERALD:24
+    - NETHERITE_INGOT:8
+    - VOUCHER:1:4
+  # 도착 후 호위팀이 우클릭해서 가져가는 내용물. 총합 1~512개.
+  arrival-rewards:
+    - HEART:16
+    - GOLD_INGOT:32
+    - DIAMOND:24
+    - EMERALD:24
+    - NETHERITE_INGOT:8
+    - VOUCHER:1:4
+  # 그룹·시간 등 나머지는 transport-game.yml을 계속 사용합니다.
+  # 필요하면 아래 키도 이 섹션에 넣어서 우선 적용할 수 있습니다.
+  # attack-groups: [raiders]
+  # pickup-groups: [raiders]
+  # defender-groups: [guards]
+  # arrival-claim-seconds: 180

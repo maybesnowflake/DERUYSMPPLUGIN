@@ -25,6 +25,11 @@ public final class TransportRaid implements Listener {
  public TransportRaid(DeruyPlugin plugin,TransportManager manager,TransportLoot loot,TransportRewards rewards){this.plugin=plugin;this.manager=manager;this.loot=loot;this.rewards=rewards;}
  public double load() throws IOException {
   File f=new File(plugin.getDataFolder(),"transport-game.yml");if(!f.exists())plugin.saveResource("transport-game.yml",false);YamlConfiguration c=new YamlConfiguration();try{c.load(f);}catch(Exception e){throw new IOException("운송전 설정 오류",e);}
+  // Explicit config.yml transport keys override the legacy file; missing keys keep old values.
+  // Ignore embedded defaults here to preserve existing servers' transport-game.yml settings.
+  var main=plugin.getConfig();
+  for(String key:List.of("health","loot","arrival-rewards","attack-groups","pickup-groups","defender-groups","arrival-claim-seconds","include-inherited-groups","pickup-requires-hit","speed","merge-delay-seconds","pickup-delay-ticks"))
+   if(main.contains("transport."+key,true))c.set(key,main.get("transport."+key));
   attackers=TransportGroups.validate(c.getStringList("attack-groups"));pickers=TransportGroups.validate(c.getStringList("pickup-groups"));inherited=c.getBoolean("include-inherited-groups",false);requiresHit=c.getBoolean("pickup-requires-hit",true);defenders=TransportGroups.validate(c.getStringList("defender-groups"));claimSeconds=c.getInt("arrival-claim-seconds",180);if(claimSeconds<1||claimSeconds>86400)throw new IllegalArgumentException("arrival-claim-seconds: 1~86400");
   maxHealth=bounded(c.getDouble("health",200),1,1000000,"health");speed=bounded(c.getDouble("speed",2),.1,8,"speed");mergeDelay=bounded(c.getDouble("merge-delay-seconds",2),.5,30,"merge-delay-seconds");
   pickupTicks=c.getInt("pickup-delay-ticks",20);if(pickupTicks<0||pickupTicks>1200)throw new IllegalArgumentException("타격/습득 틱 범위 오류");
