@@ -20,6 +20,7 @@ public final class TransportManager implements Listener {
     private final TransportLoot loot;
     private final TransportRaid raid;
     private boolean railMode;
+    public static final String POINT_ROUTE="points";
     private Map<RailPath.Cell,org.bukkit.block.data.Rail.Shape> railShapes=Map.of();
     private final List<Display> displays=new ArrayList<>();
     private final Set<Chunk> tickets=new HashSet<>();
@@ -42,6 +43,16 @@ public final class TransportManager implements Listener {
         editable();String b=base(id);if(!routes.contains(b))throw new IllegalArgumentException("먼저 /transport create "+id);
         RailPath.Cell cell=RailPath.atPlayer(feet);routes.set(b+".rail."+which,RailPath.saved(feet.getWorld(),cell));save();
     }
+    public void setPoint(int n,Location feet) throws IOException {
+        editable();if(!routes.contains(base(POINT_ROUTE)))create(POINT_ROUTE);setRegion(POINT_ROUTE,n,"stop",feet);
+    }
+    public void pointTiming(int from,int to,double seconds) throws IOException {
+        editable();var sec=routes.getConfigurationSection(base(POINT_ROUTE)+".regions");
+        if(sec==null)throw new IllegalArgumentException("먼저 /transport point <번호> 로 지점을 찍으세요.");
+        List<Integer> ids=sec.getKeys(false).stream().map(Integer::parseInt).sorted().toList();int index=ids.indexOf(from);
+        if(index<0||index+1>=ids.size()||ids.get(index+1)!=to)throw new IllegalArgumentException("숫자 순서상 이웃한 두 지점을 입력하세요. 예: /transport speed 1 2 30");
+        timing(POINT_ROUTE,from,seconds,0);
+    }
     private void startRail(String id,String b) throws IOException {
         Location a=routes.getLocation(b+".rail.start"),z=routes.getLocation(b+".rail.end");
         if(a==null||z==null||a.getWorld()==null||!a.getWorld().equals(z.getWorld()))throw new IllegalArgumentException("같은 월드의 레일 위에서 railstart / railend를 설정하세요.");
@@ -55,7 +66,7 @@ public final class TransportManager implements Listener {
         var rails=RailPath.inWorld(at.getWorld());for(int y=at.getBlockY();y>=at.getBlockY()-1;y--){var c=new RailPath.Cell(at.getBlockX(),y,at.getBlockZ());var shape=railShapes.get(c);if(shape!=null)return shape==rails.shape(c);}return false;
     }
     public boolean running(){return runningRoute!=null;}
-    public String status(){return running()?runningRoute+(railMode?" → 레일 도착점"+raid.status():" → 구역 "+legs.get(legIndex).destination)+(dwell>0?" (정차 중)":" (운송 중)"):displays.isEmpty()?"대기 중":"모델 미리보기 중";}
+    public String status(){return running()?runningRoute+(railMode?" → 레일 도착점"+raid.status():" → 지점 "+legs.get(legIndex).destination+raid.status())+(dwell>0?" (정차 중)":" (운송 중)"):displays.isEmpty()?"대기 중":"모델 미리보기 중";}
     public Set<String> routes(){var s=routes.getConfigurationSection("routes");return s==null?Set.of():s.getKeys(false);}
     private String base(String id){if(!id.matches("[a-zA-Z0-9_-]{1,40}"))throw new IllegalArgumentException("노선 이름은 영문·숫자·_·- 1~40자입니다.");return "routes."+id;}
     private void editable(){if(running())throw new IllegalArgumentException("운송을 stop 한 뒤 노선을 수정하세요.");}
@@ -80,6 +91,7 @@ public final class TransportManager implements Listener {
     }
     public List<String> describe(String id){String b=base(id);if(!routes.contains(b))throw new IllegalArgumentException("없는 노선입니다.");List<String> out=new ArrayList<>();if(routes.contains(b+".rail")){out.add("레일 출발: "+routes.getLocation(b+".rail.start"));out.add("레일 도착: "+routes.getLocation(b+".rail.end"));return out;}var sec=routes.getConfigurationSection(b+".regions");if(sec!=null)for(String k:sec.getKeys(false)){Location l=routes.getLocation(b+".regions."+k+".stop");out.add("구역 "+k+": "+(l==null?"정차점 미설정":l.getWorld().getName()+" "+String.format(Locale.ROOT,"%.1f %.1f %.1f",l.getX(),l.getY(),l.getZ()))+" / 다음 구간 "+routes.getDouble(b+".segments."+k+".seconds",60)+"초");}return out;}
     private Location stopPoint(String b,int n){String p=b+".regions."+n;Location a=routes.getLocation(p+".pos1"),z=routes.getLocation(p+".pos2"),s=routes.getLocation(p+".stop");
+        if(b.equals(base(POINT_ROUTE))&&s!=null&&s.getWorld()!=null)return s;
         if(a==null||z==null||s==null||s.getWorld()==null||!Objects.equals(a.getWorld(),s.getWorld())||!Objects.equals(z.getWorld(),s.getWorld()))throw new IllegalArgumentException("구역 "+n+"의 pos1·pos2·stop을 같은 월드에 설정하세요.");
         if(s.getBlockX()<Math.min(a.getBlockX(),z.getBlockX())||s.getBlockX()>Math.max(a.getBlockX(),z.getBlockX())||s.getBlockY()<Math.min(a.getBlockY(),z.getBlockY())||s.getBlockY()>Math.max(a.getBlockY(),z.getBlockY())||s.getBlockZ()<Math.min(a.getBlockZ(),z.getBlockZ())||s.getBlockZ()>Math.max(a.getBlockZ(),z.getBlockZ()))throw new IllegalArgumentException("구역 "+n+"의 stop이 구역 밖입니다.");return s;
     }
@@ -96,18 +108,19 @@ public final class TransportManager implements Listener {
             double seconds=routes.getDouble(b+".segments."+n+".seconds",60),wait=routes.getDouble(b+".segments."+n+".wait-seconds",0);
             if(!Double.isFinite(seconds)||seconds<1||seconds>86400||!Double.isFinite(wait)||wait<0||wait>3600)throw new IllegalArgumentException("구간 시간 설정 오류");
             double length=0;for(int j=1;j<points.size();j++)length+=points.get(j).distance(points.get(j-1));
-            if(length/seconds>16)throw new IllegalArgumentException("구간 "+n+" 속도가 16블록/초를 넘습니다. 시간을 늘리세요.");
+            if(!id.equals(POINT_ROUTE)&&length/seconds>16)throw new IllegalArgumentException("구간 "+n+" 속도가 16블록/초를 넘습니다. 시간을 늘리세요.");
             built.add(new Leg(a.getWorld(),new RoutePath(points),(int)Math.round(seconds*20),(int)Math.round(wait*20),ids.get(i+1)));
         }
+        boolean pointRaid=id.equals(POINT_ROUTE);if(pointRaid)raid.load();
         stop();legs=List.copyOf(built);legIndex=0;elapsed=0;dwell=0;
-        Leg first=legs.getFirst();var s=first.path.sample(0);Location at=location(first,s);spawn(at);runningRoute=id;
+        Leg first=legs.getFirst();var s=first.path.sample(0);Location at=location(first,s);spawn(at);runningRoute=id;if(pointRaid){try{raid.begin(at);}catch(RuntimeException e){stop();throw e;}}
         task=Bukkit.getScheduler().runTaskTimer(plugin,this::tick,2,2);
         Bukkit.broadcastMessage("§c♥ [하트 운송전] §e"+id+" 노선 운송이 시작되었습니다.");
     }
     private Location location(Leg l,RoutePath.Sample s){return new Location(l.world,s.point().x(),s.point().y(),s.point().z(),s.yaw(),0);}
     private void tick(){
         try {
-            if(displays.isEmpty()||displays.stream().anyMatch(d->!d.isValid())){stop();Bukkit.broadcastMessage("§c[하트 운송전] 운송체가 없어 운송을 중단했습니다.");return;}
+            if(displays.isEmpty()||displays.stream().anyMatch(d->!d.isValid())||(POINT_ROUTE.equals(runningRoute)&&!raid.valid())){stop();Bukkit.broadcastMessage("§c[하트 운송전] 운송체가 없어 운송을 중단했습니다.");return;}
             if(dwell>0){dwell=Math.max(0,dwell-2);if(dwell>0)return;if(legIndex==legs.size()-1){arrive();return;}legIndex++;elapsed=0;}
             Leg leg=legs.get(legIndex);elapsed=Math.min(leg.ticks,elapsed+2);Location next=location(leg,leg.path.sample((double)elapsed/leg.ticks));
             if(railMode&&(!raid.valid()||!tracksIntact(next))){stop();Bukkit.broadcastMessage("§c[하트 운송전] 레일 또는 공격 판정이 없어 운송을 중단했습니다.");return;}move(next);
