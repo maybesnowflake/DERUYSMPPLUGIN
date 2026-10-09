@@ -98,6 +98,7 @@ public class DeruyPlugin extends JavaPlugin {
     private RandomEventManager randomEventManager;
     private ContractManager contractManager;
     private ReviveItemManager reviveItemManager;
+    private com.deruy.plugin.transport.TransportManager transportManager;
 
     private com.deruy.plugin.lifesteal.HeartAuditLog heartAuditLog;
     public com.deruy.plugin.lifesteal.HeartAuditLog getHeartAuditLog() { return heartAuditLog; }
@@ -178,6 +179,19 @@ public class DeruyPlugin extends JavaPlugin {
         pm.registerEvents(randomEventManager, this);
         pm.registerEvents(contractManager, this);
         pm.registerEvents(reviveItemManager, this);
+        try {
+            transportManager = new com.deruy.plugin.transport.TransportManager(this);
+            pm.registerEvents(transportManager, this);
+            transportManager.registerGameListeners();
+            var transportCommand = new com.deruy.plugin.transport.TransportCommand(transportManager);
+            getCommand("transport").setExecutor(transportCommand);
+            getCommand("transport").setTabCompleter(transportCommand);
+        } catch (java.io.IOException | RuntimeException e) {
+            getLogger().severe("하트 운송전 초기화 실패: " + e.getMessage());
+            getCommand("transport").setExecutor((sender, command, label, args) -> {
+                sender.sendMessage("§c운송전 설정을 읽지 못했습니다. 서버 로그를 확인하세요."); return true;
+            });
+        }
 
         if (worldGuardPresent) {
             pm.registerEvents(new CombatZoneListener(this), this);
@@ -310,6 +324,7 @@ public class DeruyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (transportManager != null) transportManager.stop();
         if (heartAuditLog != null) heartAuditLog.close();
         if (kothManager != null && kothManager.isRunning()) kothManager.stop();
         if (superKothManager != null && superKothManager.isRunning()) superKothManager.stop();

@@ -1,0 +1,20 @@
+# 허용할 LuckPerms 그룹 이름으로 바꾸세요. OP도 그룹 제한을 우회하지 않습니다.
+attack-groups: [raiders]
+pickup-groups: [raiders]
+include-inherited-groups: false
+# true: 실제 타격 참가자만 줍기. false: pickup-groups 소속 전원 줍기.
+pickup-requires-hit: true
+health: 200
+damage-per-hit: 10
+hit-cooldown-ticks: 10
+speed: 2.0
+merge-delay-seconds: 2.0
+pickup-delay-ticks: 20
+# HEART:개수, VOUCHER:티어:개수, 바닐라 MATERIAL:개수. 총합 최대 512개.
+loot:
+  - HEART:16
+  - GOLD_INGOT:32
+  - DIAMOND:24
+  - EMERALD:24
+  - NETHERITE_INGOT:8
+  - VOUCHER:1:4

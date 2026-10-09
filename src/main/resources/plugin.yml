@@ -1,5 +1,5 @@
 name: DeruyPlugin
-version: 1.2.0
+version: 1.4.0
 main: com.deruy.plugin.DeruyPlugin
 api-version: '1.21'
 author: Fsixel
@@ -8,6 +8,9 @@ softdepend:
 - LuckPerms
 - voicechat
 commands:
+  transport:
+    description: 하트 화물칸 소환 및 노선 이동
+    usage: /transport help
   lifesteal:
     description: LifeSteal 시스템 관리 (toggle, status, recipe additem)
     usage: /<command> toggle|status|recipe additem <name> <slot> <material>
@@ -139,4 +142,9 @@ permissions:
   deruy.contract.use:
     default: true
   deruy.supplydrop.view:
+    default: true
+
+  deruy.transport.admin:
+    default: op
+  deruy.transport.view:
     default: true
