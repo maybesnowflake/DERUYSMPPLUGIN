@@ -167,6 +167,22 @@ class Fixes151Test {
         assertTrue(p.nextMessage().contains("제한시간이 끝났습니다"));
     }
 
+    @Test void contractProgressReachesDiskWithoutShutdown() throws Exception {
+        config.set("risk-contracts.contracts.angler.type", "FISH");
+        config.set("risk-contracts.contracts.angler.amount", 10);
+        config.set("risk-contracts.contracts.angler.time-seconds", 300);
+        var p = server.addPlayer();
+        var cm = new ContractManager(plugin);
+        assertTrue(cm.accept(p, "angler"));
+        Method add = ContractManager.class.getDeclaredMethod("add", org.bukkit.entity.Player.class, String.class, double.class);
+        add.setAccessible(true);
+        add.invoke(cm, p, "FISH", 3.0);
+        server.getScheduler().performTicks(101);       // 5초 뒤 디스크 저장 (stop 없이 = 크래시 가정)
+        var onDisk = new DataStore(plugin);
+        assertEquals(3.0, onDisk.section("contracts." + p.getUniqueId()).getDouble("progress"), 1e-9);
+        cm.stop();
+    }
+
     @Test void lastAttackerForgottenAfterCombatEnds() throws Exception {
         var ls = new com.deruy.plugin.lifesteal.LifeStealManager(plugin);
         var a = server.addPlayer(); var b = server.addPlayer();

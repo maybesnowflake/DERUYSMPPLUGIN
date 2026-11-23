@@ -6,6 +6,9 @@ public final class ContractManager implements Listener{
  private final DeruyPlugin plugin;private final Map<UUID,Active> active=new HashMap<>();
  /** 나가 있는 동안 시간이 끝난 계약: 다음 접속 때 알려줌 */
  private final Set<UUID> expiredWhileAway=new HashSet<>();
+ /** 진행도 디스크 저장 예약(피해 계약은 타격마다 바뀌므로 5초에 한 번만 쓴다). 크래시 때 최대 5초분만 잃는다. */
+ private BukkitTask pendingSave;
+ private void scheduleSave(){if(pendingSave!=null||!plugin.isEnabled())return;pendingSave=Bukkit.getScheduler().runTaskLater(plugin,()->{pendingSave=null;var ds=plugin.getDataStore();if(ds!=null)ds.save();},100L);}
  public ContractManager(DeruyPlugin p){plugin=p;restore();}
  /** 재시작해도 계약 유지. 제한시간은 실제 시각 기준(나가 있어도 흐름) */
  private void restore(){var sec=plugin.getDataStore()==null?null:plugin.getDataStore().section("contracts");if(sec==null)return;long now=System.currentTimeMillis();
@@ -22,11 +25,11 @@ public final class ContractManager implements Listener{
  public String status(Player p){Active a=active.get(p.getUniqueId());return a==null?"진행 중인 계약 없음":a.id+" "+a.type+" "+trim(a.progress)+"/"+trim(a.target);}
  public void cancel(Player p){Active a=active.remove(p.getUniqueId());if(a!=null){a.timeout.cancel();unpersist(p.getUniqueId());}}
  private String trim(double d){return d==(long)d?Long.toString((long)d):String.format(Locale.ROOT,"%.1f",d);}
- private void add(Player p,String type,double n){Active a=active.get(p.getUniqueId());if(a==null||!a.type.equals(type))return;double progress=a.progress+n;if(progress>=a.target){a.timeout.cancel();active.remove(p.getUniqueId());unpersist(p.getUniqueId());p.sendMessage("§4§l[위험 계약] §a계약 성공!");var items=plugin.getSupplyChestRegistry().rollRewards(plugin.getConfig().getStringList("risk-contracts.contracts."+a.id+".reward-items"),plugin.getLogger());items.forEach(i->p.getInventory().addItem(i).values().forEach(left->p.getWorld().dropItemNaturally(p.getLocation(),left)));}else{Active next=new Active(a.id,a.type,a.target,progress,a.timeout,a.deadline);active.put(p.getUniqueId(),next);persist(p.getUniqueId(),next);}}
+ private void add(Player p,String type,double n){Active a=active.get(p.getUniqueId());if(a==null||!a.type.equals(type))return;double progress=a.progress+n;if(progress>=a.target){a.timeout.cancel();active.remove(p.getUniqueId());unpersist(p.getUniqueId());p.sendMessage("§4§l[위험 계약] §a계약 성공!");var items=plugin.getSupplyChestRegistry().rollRewards(plugin.getConfig().getStringList("risk-contracts.contracts."+a.id+".reward-items"),plugin.getLogger());items.forEach(i->p.getInventory().addItem(i).values().forEach(left->p.getWorld().dropItemNaturally(p.getLocation(),left)));}else{Active next=new Active(a.id,a.type,a.target,progress,a.timeout,a.deadline);active.put(p.getUniqueId(),next);persist(p.getUniqueId(),next);scheduleSave();}}
  private void fail(UUID id,String why){Player p=Bukkit.getPlayer(id);if(active.remove(id)!=null)unpersist(id);if(p!=null)p.sendMessage("§4[위험 계약] §c실패: "+why);else expiredWhileAway.add(id);}
  @EventHandler public void death(EntityDeathEvent e){Player k=e.getEntity().getKiller();if(k==null)return;add(k,e.getEntity() instanceof Player?"KILL_PLAYER":"KILL_MOB",1);}
  @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true)public void damage(EntityDamageByEntityEvent e){Player p=e.getDamager() instanceof Player x?x:e.getDamager() instanceof Projectile q&&q.getShooter() instanceof Player x?x:null;if(p!=null)add(p,"DEAL_DAMAGE",e.getFinalDamage());}
  @EventHandler public void fish(PlayerFishEvent e){if(e.getState()==PlayerFishEvent.State.CAUGHT_FISH)add(e.getPlayer(),"FISH",1);}
  /** 서버 종료: 타이머만 멈추고 저장은 유지 (진행도는 바뀔 때마다 저장, 종료 때 한 번 더) */
- public void stop(){var ds=plugin.getDataStore();if(ds!=null){active.forEach(this::persist);ds.save();}active.values().forEach(a->a.timeout.cancel());active.clear();}
+ public void stop(){if(pendingSave!=null){pendingSave.cancel();pendingSave=null;}var ds=plugin.getDataStore();if(ds!=null){active.forEach(this::persist);ds.save();}active.values().forEach(a->a.timeout.cancel());active.clear();}
 }
