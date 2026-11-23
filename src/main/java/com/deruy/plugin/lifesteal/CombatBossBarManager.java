@@ -130,6 +130,12 @@ public class CombatBossBarManager {
     // ---------------- 개인 전투 보스바 (컴벳태그 걸린 본인에게만) ----------------
 
     private void updateCombatBars() {
+        // 나간 사람의 막대는 버린다(재접속하면 새 Player 객체라 예전 막대가 남아 쌓임).
+        combatBars.entrySet().removeIf(entry -> {
+            if (Bukkit.getPlayer(entry.getKey()) != null) return false;
+            entry.getValue().removeAll();
+            return true;
+        });
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID uuid = player.getUniqueId();
             boolean combatTagged = plugin.getLifeStealManager().isCombatTagged(uuid);

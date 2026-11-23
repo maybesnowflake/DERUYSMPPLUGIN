@@ -114,11 +114,15 @@ public class KothCommand implements CommandExecutor, TabCompleter {
                     zone.setCorner1(p.getLocation());
                     koth.saveZoneCorner(id, p.getLocation(), null);
                     sender.sendMessage("§a구역 '" + id + "' 1번 코너가 저장되었습니다.");
+                    if (zone.cornersInDifferentWorlds())
+                        sender.sendMessage("§c2번 코너가 다른 월드에 있습니다. 같은 월드에서 2번을 다시 지정하세요.");
                 } else if (args[2].equals("2")) {
                     zone.setCorner2(p.getLocation());
                     koth.saveZoneCorner(id, null, p.getLocation());
                     sender.sendMessage(zone.isComplete()
                             ? "§a구역 '" + id + "' 설정이 완료되었습니다."
+                            : zone.cornersInDifferentWorlds()
+                            ? "§c1번 코너가 다른 월드에 있습니다. 같은 월드에서 1번을 다시 지정하세요."
                             : "§e구역 '" + id + "' 2번 코너가 저장되었습니다. (1번 코너를 먼저 지정하세요)");
                 } else {
                     sender.sendMessage("§c마지막 인자는 1 또는 2여야 합니다.");

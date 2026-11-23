@@ -32,8 +32,14 @@ public class KothZone {
         this.corner2 = corner2;
     }
 
+    /** 두 코너가 모두 있고 같은 월드여야 완성. 다른 월드에 찍힌 코너는 구역으로 쓰지 않는다. */
     public boolean isComplete() {
-        return corner1 != null && corner2 != null;
+        return corner1 != null && corner2 != null
+                && java.util.Objects.equals(corner1.getWorld(), corner2.getWorld());
+    }
+
+    public boolean cornersInDifferentWorlds() {
+        return corner1 != null && corner2 != null && !isComplete();
     }
 
     public Location getCorner1() {

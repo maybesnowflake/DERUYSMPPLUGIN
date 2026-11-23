@@ -53,6 +53,24 @@ public class HeartDyeRestrictionListener implements Listener {
         }
     }
 
+    /** 숫자키·드래그·시프트로 넣어도 막히도록, 베틀 결과 자체를 비운다. */
+    @EventHandler
+    public void onLoomResult(org.bukkit.event.inventory.PrepareInventoryResultEvent event) {
+        if (event.getInventory().getType() != InventoryType.LOOM) return;
+        for (ItemStack item : event.getInventory().getContents()) {
+            if (RecipeManager.isHeartItem(item)) { event.setResult(null); return; }
+        }
+    }
+
+    /** 자동 제작기(크래프터)에 하트가 들어 있으면 제작하지 않는다. */
+    @EventHandler(ignoreCancelled = true)
+    public void onCrafter(org.bukkit.event.block.CrafterCraftEvent event) {
+        if (!(event.getBlock().getState(false) instanceof org.bukkit.block.Crafter crafter)) return;
+        for (ItemStack item : crafter.getInventory().getContents()) {
+            if (RecipeManager.isHeartItem(item)) { event.setCancelled(true); return; }
+        }
+    }
+
     /** 양/늑대/고양이를 하트로 직접 염색하려는 것 차단 */
     @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent event) {

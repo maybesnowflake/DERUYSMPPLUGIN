@@ -24,11 +24,15 @@ public class HeartItemListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) return;
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         ItemStack item = event.getItem();
         if (!RecipeManager.isHeartItem(item)) return;
+        if (event.getHand() != EquipmentSlot.HAND) {
+            // 왼손 하트로 표지판 글자를 물들이는 등 염료로 쓰이지 않게 막기만 한다.
+            event.setCancelled(true);
+            return;
+        }
 
         Player player = event.getPlayer();
         event.setCancelled(true);
