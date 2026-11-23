@@ -1,9 +1,9 @@
-# DERUY 보물 수레 — 리소스팩 모델 1개로 표시 (리소스팩: resourcepack/DERUY_TreasureWagon)
+# DERUY 보물 수레 — 리소스팩 모델 (resourcepack/DERUY_TreasureWagon)
 # 리소스팩이 없는 서버라면 transport-model-blocks.yml(블록 238개 조립판) 내용으로 바꾸고 /transport reload
 schema: 1
 width: 3.0
 body-length: 4.0
-wall-height: 1.24
+wall-height: 1.27
 parts:
   - name: "treasure-wagon"
     kind: "item"
@@ -13,3 +13,13 @@ parts:
     position: [0, 3.0, 0]
     scale: [2, 2, 2]
     rotation: [0, 0, 0]
+
+# 체력 비율(남은 체력 / 최대 체력)이 below 이하가 되면 모델 교체. tilt: 바닥 중심 기준 기울기(도) [x, y, z]
+damage-stages:
+  - below: 0.75   # 살짝 부서짐: 판자 몇 장 빠짐, 뒤 랜턴 떨어짐
+    item-model: "deruy:treasure_wagon_75"
+  - below: 0.50   # 거의 부서짐: 왼쪽 벽 대부분 날아감, 앞 기둥 부러짐, 보물 줄어듦
+    item-model: "deruy:treasure_wagon_50"
+  - below: 0.25   # 겨우 굴러감: 앞왼쪽 바퀴 빠짐, 벽 거의 없음, 보물 조금
+    item-model: "deruy:treasure_wagon_25"
+    tilt: [4, 0, 6]

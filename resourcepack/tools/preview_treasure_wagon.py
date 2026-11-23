@@ -1,51 +1,101 @@
-import json, math, sys
+"""모델 JSON 미리보기: 바닐라 텍스처 + z버퍼 (정사영)."""
+import json, math, sys, os
 import numpy as np
-from PIL import Image, ImageDraw
-M=json.load(open("DERUY_TreasureWagon/assets/deruy/models/item/treasure_wagon.json"))
-heart=Image.open("DERUY_TreasureWagon/assets/deruy/textures/item/heart.png").convert("RGBA")
-COL={"plank":(184,148,95),"dplank":(66,43,20),"spruce":(58,37,16),"spruce_top":(110,80,45),"sp_plank":(114,84,48),
- "iron":(220,220,220),"stone":(125,125,125),"andesite":(132,134,133),"deep":(72,72,73),"gold":(246,208,61),
- "dia_b":(98,237,228),"em_b":(42,203,87),"raw_gold":(221,169,46),"black":(8,10,15),
- "diamond":(80,220,230),"emerald":(30,200,90),"ingot":(250,220,80),"nether":(70,60,65),"star":(240,240,255),"nugget":(250,230,120),"apple":(240,200,60)}
-def rot(p,r):
-    if not r: return p
-    o=np.array(r["origin"]);a=math.radians(r["angle"]);c,s=math.cos(a),math.sin(a);q=p-o
-    x,y,z=q
-    if r["axis"]=="x": q=np.array([x,y*c-z*s,y*s+z*c])
-    elif r["axis"]=="y": q=np.array([x*c+z*s,y,-x*s+z*c])
-    else: q=np.array([x*c-y*s,x*s+y*c,z])
-    return q+o
-FACES={"north":([0,0,0],[1,0,0],[1,1,0],[0,1,0],(0,0,-1)),"south":([0,0,1],[1,0,1],[1,1,1],[0,1,1],(0,0,1)),
- "west":([0,0,0],[0,0,1],[0,1,1],[0,1,0],(-1,0,0)),"east":([1,0,0],[1,0,1],[1,1,1],[1,1,0],(1,0,0)),
- "down":([0,0,0],[1,0,0],[1,0,1],[0,0,1],(0,-1,0)),"up":([0,1,0],[1,1,0],[1,1,1],[0,1,1],(0,1,0))}
-def render(yaw,pitch,out,size=900):
-    cy,sy=math.cos(math.radians(yaw)),math.sin(math.radians(yaw));cp,sp=math.cos(math.radians(pitch)),math.sin(math.radians(pitch))
-    def view(p):
-        x,y,z=p-np.array([8,-4,8]); x,z=x*cy-z*sy,x*sy+z*cy; y,z=y*cp-z*sp,y*sp+z*cp
-        return np.array([x,y,z])
-    light=np.array([0.4,0.8,-0.45]);light/=np.linalg.norm(light)
-    polys=[]
-    for e in M["elements"]:
-        f=np.array(e["from"]);t=np.array(e["to"]);r=e.get("rotation")
-        for name,fd in e["faces"].items():
-            a,b,c_,d,n=FACES[name]
-            pts=[rot(f+(t-f)*np.array(v),r) for v in (a,b,c_,d)]
-            nn=rot(np.array(n,float)+np.array(r["origin"]) if r else np.array(n,float),r)-(np.array(r["origin"]) if r else 0)
-            tex=fd["texture"][1:]
-            if tex=="heart":
-                u0,v0,u1,v1=fd["uv"];xs=range(int(min(u0,u1)),int(max(u0,u1)));cols=[heart.getpixel((x,int(v0)))[:3] for x in xs]
-                col=tuple(int(sum(c[i] for c in cols)/len(cols)) for i in range(3))
-            else: col=COL.get(tex,(255,0,255))
-            vp=[view(p) for p in pts]; vn=view(nn+np.array([8,-4,8]))-view(np.array([8,-4,8]))
-            two=(t-f).min()==0
-            if vn[2]>0 and not two: continue
-            sh=0.55+0.45*abs(float(np.dot(nn,light)))
-            polys.append((sum(p[2] for p in vp)/4,[(p[0],p[1]) for p in vp],tuple(int(c*sh) for c in col)))
-    polys.sort(key=lambda x:-x[0])
-    im=Image.new("RGB",(size,size),(135,180,230));dr=ImageDraw.Draw(im);sc=size/52
-    for _,pts,col in polys:
-        dr.polygon([(size/2+x*sc,size/2-y*sc) for x,y in pts],fill=col,outline=tuple(max(0,c-35) for c in col))
-    im.save(out)
-render(35,-25,"view_a.png");render(-140,-30,"view_b.png");render(90,-10,"view_side.png");render(0,-70,"view_top.png")
-ims=[Image.open(f) for f in ("view_a.png","view_b.png","view_side.png","view_top.png")]
-sheet=Image.new("RGB",(1800,1800));[sheet.paste(im,((i%2)*900,(i//2)*900)) for i,im in enumerate(ims)];sheet.save("preview.png")
+from PIL import Image
+
+VAN = os.environ.get("VANILLA_TEX", "vanilla/t")
+_tex = {}
+def texture(tid):
+    if tid not in _tex:
+        p = tid.split(":", 1)[1].replace("/", "_")
+        im = Image.open(os.path.join(VAN, p + ".png")).convert("RGBA")
+        w = im.size[0]
+        im = im.crop((0, 0, w, w))          # 애니메이션 텍스처는 첫 프레임
+        _tex[tid] = np.asarray(im).astype(np.float32)
+    return _tex[tid]
+
+FACE = {  # (s,t) → 단위 상자 좌표, 법선
+    "north": (lambda s, t: (1 - s, 1 - t, 0 * s), (0, 0, -1)),
+    "south": (lambda s, t: (s, 1 - t, 0 * s + 1), (0, 0, 1)),
+    "west": (lambda s, t: (0 * s, 1 - t, s), (-1, 0, 0)),
+    "east": (lambda s, t: (0 * s + 1, 1 - t, 1 - s), (1, 0, 0)),
+    "up": (lambda s, t: (s, 0 * s + 1, t), (0, 1, 0)),
+    "down": (lambda s, t: (s, 0 * s, 1 - t), (0, -1, 0)),
+}
+
+def rotmat(axis, ang):
+    a = math.radians(ang); c, s = math.cos(a), math.sin(a)
+    if axis == "x": return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+    if axis == "y": return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+def render(model_path, yaw, pitch, size=900, span=56, center=(8, 0, 8)):
+    md = json.load(open(model_path))
+    texmap = md["textures"]
+    cy, sy = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    cp, sp = math.cos(math.radians(pitch)), math.sin(math.radians(pitch))
+    V = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]]) @ np.array([[cy, 0, -sy], [0, 1, 0], [sy, 0, cy]])
+    img = np.zeros((size, size, 3), np.float32); img[:] = (150, 190, 235)
+    zb = np.full((size, size), np.inf, np.float32)
+    sc = size / span
+    light = np.array([0.35, 0.85, -0.4]); light /= np.linalg.norm(light)
+    C = np.array(center, float)
+    for e in md["elements"]:
+        f = np.array(e["from"], float); t = np.array(e["to"], float)
+        R = np.eye(3); o = np.zeros(3)
+        if "rotation" in e:
+            R = rotmat(e["rotation"]["axis"], e["rotation"]["angle"]); o = np.array(e["rotation"]["origin"], float)
+        glow = e.get("light_emission", 0)
+        for fname, fd in e["faces"].items():
+            fn, n = FACE[fname]
+            ref = fd["texture"].lstrip("#")
+            tid = texmap.get(ref, ref)
+            tx = texture(tid); th, tw = tx.shape[:2]
+            u0, v0, u1, v1 = fd["uv"]
+            def P(s, tt):
+                u = np.array(fn(s, tt), float)
+                w = f + (t - f) * u
+                w = R @ (w - o) + o
+                v = V @ (w - C)
+                return np.array([size / 2 + v[0] * sc, size / 2 - v[1] * sc, v[2]])
+            p0, p1, p3 = P(0, 0), P(1, 0), P(0, 1)
+            nw = R @ np.array(n, float)
+            shade = 0.55 + 0.45 * max(0.0, float(nw @ light)) + 0.12 * abs(nw[1])
+            if glow: shade = 1.15
+            e1 = p1[:2] - p0[:2]; e2 = p3[:2] - p0[:2]
+            det = e1[0] * e2[1] - e1[1] * e2[0]
+            if abs(det) < 1e-6: continue
+            pts = np.array([p0[:2], p1[:2], p3[:2], p1[:2] + e2])
+            x0, y0 = np.floor(pts.min(0)).astype(int); x1, y1 = np.ceil(pts.max(0)).astype(int)
+            x0, y0 = max(x0, 0), max(y0, 0); x1, y1 = min(x1, size - 1), min(y1, size - 1)
+            if x1 < x0 or y1 < y0: continue
+            ys, xs = np.mgrid[y0:y1 + 1, x0:x1 + 1].astype(np.float32)
+            dx = xs + .5 - p0[0]; dy = ys + .5 - p0[1]
+            s = (dx * e2[1] - dy * e2[0]) / det
+            tt = (e1[0] * dy - e1[1] * dx) / det
+            inside = (s >= 0) & (s <= 1) & (tt >= 0) & (tt <= 1)
+            if not inside.any(): continue
+            z = p0[2] + s * (p1[2] - p0[2]) + tt * (p3[2] - p0[2])
+            u = u0 + s * (u1 - u0); v = v0 + tt * (v1 - v0)
+            ti = np.clip((u / 16 * tw).astype(int), 0, tw - 1); tj = np.clip((v / 16 * th).astype(int), 0, th - 1)
+            col = tx[tj, ti]
+            ok = inside & (col[..., 3] > 10)
+            reg = zb[y0:y1 + 1, x0:x1 + 1]
+            ok &= z < reg
+            reg[ok] = z[ok]
+            img[y0:y1 + 1, x0:x1 + 1][ok] = np.clip(col[..., :3][ok] * shade, 0, 255)
+    return Image.fromarray(img.astype(np.uint8))
+
+if __name__ == "__main__":
+    base = sys.argv[1]
+    out = sys.argv[2]
+    names = ["treasure_wagon", "treasure_wagon_75", "treasure_wagon_50", "treasure_wagon_25"]
+    views = [(35, -28), (-145, -22)]
+    cell = 700
+    sheet = Image.new("RGB", (cell * 4, cell * len(views)), (255, 255, 255))
+    for i, n in enumerate(names):
+        for j, (yw, pt) in enumerate(views):
+            im = render(f"{base}/assets/deruy/models/item/{n}.json", yw, pt, size=cell, span=50, center=(8, -4, 8))
+            sheet.paste(im, (i * cell, j * cell))
+    sheet.save(out)
+    print("saved", out)

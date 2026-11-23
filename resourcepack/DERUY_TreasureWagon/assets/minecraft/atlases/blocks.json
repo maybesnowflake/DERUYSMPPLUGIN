@@ -1,0 +1,136 @@
+{
+ "sources": [
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/ancient_debris_side"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/ancient_debris_top"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/dark_oak_log"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/dark_oak_log_top"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/dark_oak_planks"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/diamond_block"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/emerald_block"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/gold_block"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/heavy_core"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/iron_block"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/iron_chain"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/lantern"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/netherite_block"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/oak_planks"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/polished_deepslate"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/raw_gold_block"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/spruce_planks"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:block/stripped_dark_oak_log"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:gui/sprites/hud/heart/container_hardcore"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:gui/sprites/hud/heart/hardcore_full"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/diamond"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/echo_shard"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/emerald"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/enchanted_book"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/gold_ingot"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/golden_apple"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/heart_of_the_sea"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/mace"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/nether_star"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/netherite_ingot"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/netherite_sword"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/ominous_trial_key"
+  },
+  {
+   "type": "minecraft:single",
+   "resource": "minecraft:item/totem_of_undying"
+  }
+ ]
+}
