@@ -460,10 +460,16 @@ question-time:
 
 # 한 번에 한 이벤트만 실행되어 상충 규칙이 겹치지 않음
 random-events:
+  # CAMERA: 각자 시야 앞 세로 릴 / GUI: 상자 화면
   roulette-style: CAMERA
+  # 회전 시간(초, 2~30). 끝나면 2초간 당첨 연출
   roulette-seconds: 5
-  # 아이템이 한 칸 지나가는 간격: 2틱(0.1초) 또는 4틱(0.2초)
+  # 가장 빠를 때 한 칸 지나가는 간격: 2틱(0.1초) 또는 4틱(0.2초). 이후 점점 느려져 당첨 칸에 멈춤
   roulette-step-ticks: 2
+  # 직전에 나온 이벤트는 다음 추첨에서 제외
+  avoid-repeat: true
+  # 당첨 확률 가중치(없으면 1). 0이면 릴에는 보이지만 당첨되지 않음. 예: LIFESTEAL: 2.0
+  weights: {}
   enabled: false
   interval-seconds:
     min: 900
