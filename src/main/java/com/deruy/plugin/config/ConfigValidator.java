@@ -67,6 +67,13 @@ public final class ConfigValidator {
         integer(c,"random-events.duration-seconds",1,31536000);
         number(c,"random-events.mace-shockwave-radius",0.1,64);
         integer(c,"random-events.kill-invisibility-seconds",1,86400);
+        optionalInt(c,"random-events.roulette-seconds",2,30);
+        var weights=c.getConfigurationSection("random-events.weights");
+        if(weights!=null) for(String key:weights.getKeys(false)) {
+            try { com.deruy.plugin.randomevent.RandomEventManager.Type.valueOf(key.toUpperCase(Locale.ROOT)); }
+            catch(IllegalArgumentException e) { fail("random-events.weights","없는 이벤트: "+key); }
+            number(c,"random-events.weights."+key,0,1000000);
+        }
         for(String event:c.getStringList("random-events.enabled-events")) try {
             com.deruy.plugin.randomevent.RandomEventManager.Type.valueOf(event.toUpperCase(Locale.ROOT));
         } catch(IllegalArgumentException e) { fail("random-events.enabled-events","없는 이벤트: "+event); }
