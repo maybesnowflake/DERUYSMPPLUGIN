@@ -90,14 +90,22 @@ public class SupplyDropManager implements GameEvent {
         int triggerCount = triggersMin + random.nextInt(Math.max(1, triggersMax - triggersMin + 1));
 
         pendingTargetsToday.clear();
-        for (int i = 0; i < triggerCount; i++) {
-            int hour = startHour + random.nextInt(Math.max(1, endHour - startHour));
-            int minute = random.nextInt(60);
-            if (hour >= 24) hour = 23;
-            pendingTargetsToday.add(LocalTime.of(hour, minute));
-        }
-        // 절대 로그로 남기지 않음 (관리자도 모르게)
+        // 이미 지난 시각은 뽑지 않는다 (오후에 켜도 지난 보급이 한꺼번에 터지지 않음). 절대 로그로 남기지 않음.
+        pendingTargetsToday.addAll(rollTargets(startHour, endHour, triggerCount, LocalTime.now(), random));
         currentDay = java.time.LocalDate.now().getDayOfYear();
+    }
+
+    /** [startHour, endHour) 안에서 notBefore 이후의 분 단위 시각 count개. 남은 시간이 없으면 빈 목록. */
+    static List<LocalTime> rollTargets(int startHour, int endHour, int count, LocalTime notBefore, Random random) {
+        int from = Math.max(Math.clamp(startHour, 0, 24) * 60, notBefore.getHour() * 60 + notBefore.getMinute() + 1);
+        int to = Math.clamp(endHour, 0, 24) * 60;
+        List<LocalTime> out = new ArrayList<>();
+        if (from >= to) return out;
+        for (int i = 0; i < count; i++) {
+            int minute = from + random.nextInt(to - from);
+            out.add(LocalTime.of(minute / 60, minute % 60));
+        }
+        return out;
     }
 
     private void check() {
@@ -143,34 +151,42 @@ public class SupplyDropManager implements GameEvent {
 
     private void spawnSingleChest() {
         Location[] region = plugin.getDataStore().loadSupplyRegion("normal");
-        Location loc;
-
-        if (region != null) {
-            loc = randomLocationInRegion(region[0], region[1]);
-        } else {
+        spawnWithRetry(plugin, () -> {
+            if (region != null) return randomLocationInRegion(region[0], region[1]);
             World world = Bukkit.getWorlds().get(0);
             double centerX = plugin.getConfig().getDouble("supplydrop.normal.center-x", 0);
             double centerZ = plugin.getConfig().getDouble("supplydrop.normal.center-z", 0);
             int radius = plugin.getConfig().getInt("supplydrop.normal.radius", 200);
-
             Random random = ThreadLocalRandom.current();
             double x = centerX + (random.nextDouble() * 2 - 1) * radius;
             double z = centerZ + (random.nextDouble() * 2 - 1) * radius;
-            int y = world.getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z)) + 1;
-            loc = new Location(world, x, y, z);
-        }
+            return new Location(world, x, surfaceY(world, x, z), z);
+        }, "supplydrop.normal.reward-items");
+    }
 
-        Block block = loc.getBlock();
-        if (!block.getType().isAir() || plugin.getSupplyChestRegistry().isTracked(block.getLocation())) return;
-        for (var face : java.util.List.of(org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.SOUTH,
-                org.bukkit.block.BlockFace.EAST, org.bukkit.block.BlockFace.WEST)) {
-            if (block.getRelative(face).getType() == Material.CHEST) return;
+    /** 자리가 막혔으면 다른 자리로 최대 8번 다시 시도 (예전엔 그냥 1개가 사라졌음). 일반·슈퍼 공용. */
+    static boolean spawnWithRetry(com.deruy.plugin.DeruyPlugin plugin, java.util.function.Supplier<Location> pick, String rewardPath) {
+        for (int attempt = 0; attempt < 8; attempt++) {
+            Block block = pick.get().getBlock();
+            if (!block.getType().isAir() || plugin.getSupplyChestRegistry().isTracked(block.getLocation())) continue;
+            if (block.getRelative(org.bukkit.block.BlockFace.DOWN).isLiquid()) continue; // 물·용암 위 X
+            boolean nextToChest = false;
+            for (var face : java.util.List.of(org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.SOUTH,
+                    org.bukkit.block.BlockFace.EAST, org.bukkit.block.BlockFace.WEST))
+                if (block.getRelative(face).getType() == Material.CHEST) nextToChest = true;
+            if (nextToChest) continue;
+            block.setType(Material.CHEST);
+            List<ItemStack> rolled = plugin.getSupplyChestRegistry().rollRewards(plugin.getConfig().getStringList(rewardPath), plugin.getLogger());
+            plugin.getSupplyChestRegistry().register(block.getLocation(), rolled);
+            return true;
         }
-        block.setType(Material.CHEST);
+        plugin.getLogger().info("보급 상자 놓을 자리를 찾지 못해 1개를 건너뜁니다 (" + rewardPath + ")");
+        return false;
+    }
 
-        List<String> rewardEntries = plugin.getConfig().getStringList("supplydrop.normal.reward-items");
-        List<ItemStack> rolled = plugin.getSupplyChestRegistry().rollRewards(rewardEntries, plugin.getLogger());
-        plugin.getSupplyChestRegistry().register(block.getLocation(), rolled);
+    /** 나뭇잎을 무시한 지면 바로 위 (나무 꼭대기에 상자가 얹히지 않게). */
+    static int surfaceY(World world, double x, double z) {
+        return world.getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z), org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
     }
 
     /** 구역(두 코너) 안에서 랜덤 좌표를 고르고, 그 x,z의 지형 최고높이+1을 y로 사용 */
@@ -184,8 +200,6 @@ public class SupplyDropManager implements GameEvent {
         Random random = ThreadLocalRandom.current();
         double x = minX + random.nextDouble() * (maxX - minX);
         double z = minZ + random.nextDouble() * (maxZ - minZ);
-        int y = world.getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z)) + 1;
-
-        return new Location(world, x, y, z);
+        return new Location(world, x, surfaceY(world, x, z), z);
     }
 }

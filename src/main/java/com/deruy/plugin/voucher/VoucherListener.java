@@ -19,6 +19,17 @@ public class VoucherListener implements Listener {
         this.plugin = plugin;
     }
 
+    /** 상품권은 상자 아이템이라 호퍼·상자 수레·셜커 상자 조합에 들어가 사라질 수 있다 → 조합 막기 */
+    @EventHandler
+    public void onCraft(org.bukkit.event.inventory.PrepareItemCraftEvent event) {
+        for (ItemStack ingredient : event.getInventory().getMatrix()) {
+            if (plugin.getVoucherManager().getTier(ingredient) != -1) {
+                event.getInventory().setResult(null);
+                return;
+            }
+        }
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;

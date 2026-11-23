@@ -180,6 +180,8 @@ public class KothManager implements GameEvent {
 
             if (!now.isBefore(target)) {
                 triggeredScheduleSlotsToday.add(i);
+                // 서버를 정해진 시각보다 늦게 켰거나 오래 멈췄던 경우: 지난 시각은 건너뛴다
+                if (!withinStartWindow(now, target)) continue;
                 Bukkit.broadcastMessage("§6§l" + label + " §e정기 시간이 되어 자동으로 시작됩니다!");
                 start(); // 등록된 전체 구역 대상으로 자동 시작
             }
@@ -187,6 +189,11 @@ public class KothManager implements GameEvent {
     }
 
     // ---------------- GameEvent (전체 구역 대상) ----------------
+
+    /** 자동 시작 허용 범위: 정해진 시각부터 2분 안 (확인은 20초마다). */
+    static boolean withinStartWindow(LocalTime now, LocalTime target) {
+        return !now.isBefore(target) && now.isBefore(target.plusMinutes(2)) && !target.plusMinutes(2).isBefore(target);
+    }
 
     @Override
     public void start() {
@@ -341,9 +348,15 @@ public class KothManager implements GameEvent {
         }
     }
 
+    /** 관전자·사망 상태·크리에이티브(운영자)는 점령에 끼지 않는다. */
+    static boolean canCapture(Player p) {
+        return !p.isDead() && p.getGameMode() != org.bukkit.GameMode.SPECTATOR && p.getGameMode() != org.bukkit.GameMode.CREATIVE;
+    }
+
     private Player findPlayerInZone(KothZone zone) {
         Player fallback = null;
         for (Player p : zone.getCorner1().getWorld().getPlayers()) {
+            if (!canCapture(p)) continue;
             if (zone.contains(p.getLocation())) {
                 if (p.getUniqueId().equals(zone.getCurrentHolder())) {
                     return p;

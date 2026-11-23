@@ -32,6 +32,10 @@ public class HeartItemListener implements Listener {
 
         Player player = event.getPlayer();
         event.setCancelled(true);
+        if (!plugin.getLifeStealManager().isSystemEnabled()) {
+            player.sendMessage("§cLifeSteal 시스템이 꺼져 있어 하트를 사용할 수 없습니다.");
+            return;
+        }
 
         if (!plugin.getLifeStealManager().addHeart(player, 1, "HEART_ITEM")) {
             player.sendMessage("§c이미 하트 상한선에 도달해 더 이상 늘릴 수 없습니다.");

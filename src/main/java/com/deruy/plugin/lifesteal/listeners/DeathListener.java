@@ -45,9 +45,14 @@ public class DeathListener implements Listener {
         plugin.getLifeStealManager().tagCombat(victim, attacker, durationMillis);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
-        if (!plugin.getLifeStealManager().isSystemEnabled()) return;
+        if (!plugin.getLifeStealManager().isSystemEnabled()) {
+            // 하트 시스템이 꺼져 있어도 바운티 처치는 따로 처리한다
+            Player k = event.getEntity().getKiller();
+            if (k != null && !k.equals(event.getEntity())) plugin.getBountyManager().onKill(k, event.getEntity());
+            return;
+        }
 
         Player victim = event.getEntity();
         Player killer = victim.getKiller();

@@ -35,6 +35,13 @@ public class WithdrawCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (plugin.getConfig().getBoolean("lifesteal.block-withdraw-in-combat", true)
+                && plugin.getLifeStealManager().isCombatTagged(player.getUniqueId())) {
+            long sec = (plugin.getLifeStealManager().getRemainingCombatMillis(player.getUniqueId()) + 999) / 1000;
+            player.sendMessage("§c전투 중에는 하트를 인출할 수 없습니다. (" + sec + "초 남음)");
+            return true;
+        }
+
         int amount = 1;
         if (args.length >= 1) {
             try {

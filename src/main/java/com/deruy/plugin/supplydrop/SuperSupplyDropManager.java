@@ -126,33 +126,16 @@ public class SuperSupplyDropManager implements GameEvent {
 
     private void spawnSingleChest() {
         Location[] region = plugin.getDataStore().loadSupplyRegion("super");
-        Location loc;
-
-        if (region != null) {
-            loc = SupplyDropManager.randomLocationInRegion(region[0], region[1]);
-        } else {
+        SupplyDropManager.spawnWithRetry(plugin, () -> {
+            if (region != null) return SupplyDropManager.randomLocationInRegion(region[0], region[1]);
             World world = Bukkit.getWorlds().get(0);
             double centerX = plugin.getConfig().getDouble("supplydrop.super.center-x", 0);
             double centerZ = plugin.getConfig().getDouble("supplydrop.super.center-z", 0);
             int radius = plugin.getConfig().getInt("supplydrop.super.radius", 300);
-
             Random random = ThreadLocalRandom.current();
             double x = centerX + (random.nextDouble() * 2 - 1) * radius;
             double z = centerZ + (random.nextDouble() * 2 - 1) * radius;
-            int y = world.getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z)) + 1;
-            loc = new Location(world, x, y, z);
-        }
-
-        Block block = loc.getBlock();
-        if (!block.getType().isAir() || plugin.getSupplyChestRegistry().isTracked(block.getLocation())) return;
-        for (var face : java.util.List.of(org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.SOUTH,
-                org.bukkit.block.BlockFace.EAST, org.bukkit.block.BlockFace.WEST)) {
-            if (block.getRelative(face).getType() == Material.CHEST) return;
-        }
-        block.setType(Material.CHEST);
-
-        List<String> rewardEntries = plugin.getConfig().getStringList("supplydrop.super.reward-items");
-        List<ItemStack> rolled = plugin.getSupplyChestRegistry().rollRewards(rewardEntries, plugin.getLogger());
-        plugin.getSupplyChestRegistry().register(block.getLocation(), rolled);
+            return new Location(world, x, SupplyDropManager.surfaceY(world, x, z), z);
+        }, "supplydrop.super.reward-items");
     }
 }
