@@ -1,0 +1,13 @@
+{
+  "pack": {
+    "description": "DERUY 보물 수레 v2 (1.21.11)",
+    "min_format": [
+      75,
+      0
+    ],
+    "max_format": [
+      75,
+      0
+    ]
+  }
+}

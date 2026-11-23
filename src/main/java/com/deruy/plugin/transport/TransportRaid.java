@@ -69,7 +69,7 @@ public final class TransportRaid implements Listener {
   int tick=Bukkit.getCurrentTick();Integer last=lastHit.get(p.getUniqueId());
   // Both invisible bodies share one target: a sweep must not damage it twice.
   if(last!=null&&tick==last)return;lastHit.put(p.getUniqueId(),tick);health=Math.max(0,health-dealt);
-  Location at=manager.currentLocation();if(at==null)return;at.getWorld().playSound(at,Sound.BLOCK_ANVIL_HIT,.55f,1.6f);at.getWorld().spawnParticle(Particle.CRIT,at.clone().add(0,1.2,0),8,.8,.4,.8,.1);
+  Location at=manager.currentLocation();if(at==null)return;at.getWorld().playSound(at,Sound.BLOCK_ANVIL_HIT,.55f,1.6f);at.getWorld().spawnParticle(Particle.CRIT,at.clone().add(0,1.2,0),8,.8,.4,.8,.1);if(health>0)manager.applyDamage(health/maxHealth);
   if(health==0){List<ItemStack> drop=singles;List<String> access=pickers;boolean inherit=inherited;double delay=mergeDelay;int pickup=pickupTicks;List<String> participants=requiresHit?lastHit.keySet().stream().map(UUID::toString).sorted().toList():null;manager.stop();loot.burst(at,drop,access,inherit,delay,pickup,participants);Bukkit.broadcastMessage("§c♥ [하트 운송전] §e"+p.getName()+"§c의 공격으로 열차가 파괴되었습니다! 보물이 흩어집니다.");}else move(at);
  }
  public void clear(){awaitingId=null;active=false;boxes.forEach(Entity::remove);boxes.clear();lastHit.clear();if(bar!=null){bar.removeAll();bar=null;}}

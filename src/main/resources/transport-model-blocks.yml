@@ -1,0 +1,1439 @@
+# DERUY CONCEPT PILE V7 - 238 elements
+schema: 1
+width: 3.0
+body-length: 4.0
+wall-height: 1.0
+parts:
+  - name: "axle"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [0, 0.5, -1.3]
+    scale: [2.7, 0.17, 0.17]
+    rotation: [0, 0, 0]
+  - name: "wheel-rim"
+    kind: "block"
+    material: "STONE"
+    position: [-1.31, 0.5, -1.3]
+    scale: [0.28, 0.92, 0.92]
+    rotation: [0, 0, 0]
+  - name: "stone-wheel-hub"
+    kind: "block"
+    material: "ANDESITE"
+    position: [-1.46, 0.5, -1.3]
+    scale: [0.05, 0.62, 0.62]
+    rotation: [0, 0, 0]
+  - name: "wheel-pin"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [-1.5, 0.5, -1.3]
+    scale: [0.1, 0.23, 0.23]
+    rotation: [0, 0, 0]
+  - name: "wheel-rim"
+    kind: "block"
+    material: "STONE"
+    position: [1.31, 0.5, -1.3]
+    scale: [0.28, 0.92, 0.92]
+    rotation: [0, 0, 0]
+  - name: "stone-wheel-hub"
+    kind: "block"
+    material: "ANDESITE"
+    position: [1.46, 0.5, -1.3]
+    scale: [0.05, 0.62, 0.62]
+    rotation: [0, 0, 0]
+  - name: "wheel-pin"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [1.5, 0.5, -1.3]
+    scale: [0.1, 0.23, 0.23]
+    rotation: [0, 0, 0]
+  - name: "axle"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [0, 0.5, 1.3]
+    scale: [2.7, 0.17, 0.17]
+    rotation: [0, 0, 0]
+  - name: "wheel-rim"
+    kind: "block"
+    material: "STONE"
+    position: [-1.31, 0.5, 1.3]
+    scale: [0.28, 0.92, 0.92]
+    rotation: [0, 0, 0]
+  - name: "stone-wheel-hub"
+    kind: "block"
+    material: "ANDESITE"
+    position: [-1.46, 0.5, 1.3]
+    scale: [0.05, 0.62, 0.62]
+    rotation: [0, 0, 0]
+  - name: "wheel-pin"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [-1.5, 0.5, 1.3]
+    scale: [0.1, 0.23, 0.23]
+    rotation: [0, 0, 0]
+  - name: "wheel-rim"
+    kind: "block"
+    material: "STONE"
+    position: [1.31, 0.5, 1.3]
+    scale: [0.28, 0.92, 0.92]
+    rotation: [0, 0, 0]
+  - name: "stone-wheel-hub"
+    kind: "block"
+    material: "ANDESITE"
+    position: [1.46, 0.5, 1.3]
+    scale: [0.05, 0.62, 0.62]
+    rotation: [0, 0, 0]
+  - name: "wheel-pin"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [1.5, 0.5, 1.3]
+    scale: [0.1, 0.23, 0.23]
+    rotation: [0, 0, 0]
+  - name: "coupler-bar"
+    kind: "block"
+    material: "POLISHED_DEEPSLATE"
+    position: [0, 0.88, -2.07]
+    scale: [0.3, 0.2, 0.32]
+    rotation: [0, 0, 0]
+  - name: "coupler-head"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [0, 0.88, -2.32]
+    scale: [0.55, 0.32, 0.16]
+    rotation: [0, 0, 0]
+  - name: "coupler-bar"
+    kind: "block"
+    material: "POLISHED_DEEPSLATE"
+    position: [0, 0.88, 2.07]
+    scale: [0.3, 0.2, 0.32]
+    rotation: [0, 0, 0]
+  - name: "coupler-head"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [0, 0.88, 2.32]
+    scale: [0.55, 0.32, 0.16]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1, 1.08, -1.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1, 1.08, -0.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1, 1.08, 0.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1, 1.08, 1.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0, 1.08, -1.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0, 1.08, -0.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0, 1.08, 0.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0, 1.08, 1.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1, 1.08, -1.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1, 1.08, -0.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1, 1.08, 0.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "floor-tile"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1, 1.08, 1.5]
+    scale: [0.998, 0.24, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-0"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.05, 0.87, -1.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-1"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.05, 0.87, -0.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-2"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.05, 0.87, 0.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-3"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.05, 0.87, 1.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-0"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.05, 0.87, -1.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-1"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.05, 0.87, -0.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-2"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.05, 0.87, 0.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "chassis-3"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.05, 0.87, 1.5]
+    scale: [0.3, 0.16, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1.4, 1.7, -1.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1.4, 1.7, -0.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1.4, 1.7, 0.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-1.4, 1.7, 1.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1.4, 1.7, -1.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1.4, 1.7, -0.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1.4, 1.7, 0.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "side-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [1.4, 1.7, 1.5]
+    scale: [0.2, 0.998, 0.998]
+    rotation: [0, 0, 0]
+  - name: "end-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-0.86, 1.7, -1.9]
+    scale: [0.858, 0.998, 0.2]
+    rotation: [0, 0, 0]
+  - name: "end-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0.0, 1.7, -1.9]
+    scale: [0.858, 0.998, 0.2]
+    rotation: [0, 0, 0]
+  - name: "end-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0.86, 1.7, -1.9]
+    scale: [0.858, 0.998, 0.2]
+    rotation: [0, 0, 0]
+  - name: "end-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [-0.86, 1.7, 1.9]
+    scale: [0.858, 0.998, 0.2]
+    rotation: [0, 0, 0]
+  - name: "end-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0.0, 1.7, 1.9]
+    scale: [0.858, 0.998, 0.2]
+    rotation: [0, 0, 0]
+  - name: "end-panel"
+    kind: "block"
+    material: "OAK_PLANKS"
+    position: [0.86, 1.7, 1.9]
+    scale: [0.858, 0.998, 0.2]
+    rotation: [0, 0, 0]
+  - name: "corner-post"
+    kind: "block"
+    material: "SPRUCE_LOG"
+    position: [-1.445, 1.69, -1.945]
+    scale: [0.28, 1.02, 0.28]
+    rotation: [0, 0, 0]
+  - name: "corner-post"
+    kind: "block"
+    material: "SPRUCE_LOG"
+    position: [-1.445, 1.69, 0]
+    scale: [0.28, 1.02, 0.28]
+    rotation: [0, 0, 0]
+  - name: "corner-post"
+    kind: "block"
+    material: "SPRUCE_LOG"
+    position: [-1.445, 1.69, 1.945]
+    scale: [0.28, 1.02, 0.28]
+    rotation: [0, 0, 0]
+  - name: "corner-post"
+    kind: "block"
+    material: "SPRUCE_LOG"
+    position: [1.445, 1.69, -1.945]
+    scale: [0.28, 1.02, 0.28]
+    rotation: [0, 0, 0]
+  - name: "corner-post"
+    kind: "block"
+    material: "SPRUCE_LOG"
+    position: [1.445, 1.69, 0]
+    scale: [0.28, 1.02, 0.28]
+    rotation: [0, 0, 0]
+  - name: "corner-post"
+    kind: "block"
+    material: "SPRUCE_LOG"
+    position: [1.445, 1.69, 1.945]
+    scale: [0.28, 1.02, 0.28]
+    rotation: [0, 0, 0]
+  - name: "corner-cap"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.43, 2.27, -1.93]
+    scale: [0.3, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "corner-cap"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.43, 2.27, 1.93]
+    scale: [0.3, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "side-cap-0"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.43, 2.27, -1.3335]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "side-cap-1"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.43, 2.27, -0.4445000000000001]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "side-cap-2"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.43, 2.27, 0.4445000000000001]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "side-cap-3"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-1.43, 2.27, 1.3335]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "corner-cap"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.43, 2.27, -1.93]
+    scale: [0.3, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "corner-cap"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.43, 2.27, 1.93]
+    scale: [0.3, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "side-cap-0"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.43, 2.27, -1.3335]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "side-cap-1"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.43, 2.27, -0.4445000000000001]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "side-cap-2"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.43, 2.27, 0.4445000000000001]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "side-cap-3"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [1.43, 2.27, 1.3335]
+    scale: [0.3, 0.14, 0.887]
+    rotation: [0, 0, 0]
+  - name: "end-cap-0"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-0.8520000000000001, 2.27, -1.93]
+    scale: [0.85, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "end-cap-1"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [0.0, 2.27, -1.93]
+    scale: [0.85, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "end-cap-2"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [0.8519999999999999, 2.27, -1.93]
+    scale: [0.85, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "end-cap-0"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [-0.8520000000000001, 2.27, 1.93]
+    scale: [0.85, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "end-cap-1"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [0.0, 2.27, 1.93]
+    scale: [0.85, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "end-cap-2"
+    kind: "block"
+    material: "DARK_OAK_PLANKS"
+    position: [0.8519999999999999, 2.27, 1.93]
+    scale: [0.85, 0.14, 0.3]
+    rotation: [0, 0, 0]
+  - name: "iron-bolt"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [-1.5719999999999998, 1.49, -1.93]
+    scale: [0.022, 0.095, 0.095]
+    rotation: [0, 0, 0]
+  - name: "iron-bolt"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [-1.5719999999999998, 1.49, 0]
+    scale: [0.022, 0.095, 0.095]
+    rotation: [0, 0, 0]
+  - name: "iron-bolt"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [-1.5719999999999998, 1.49, 1.93]
+    scale: [0.022, 0.095, 0.095]
+    rotation: [0, 0, 0]
+  - name: "iron-bolt"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [1.5719999999999998, 1.49, -1.93]
+    scale: [0.022, 0.095, 0.095]
+    rotation: [0, 0, 0]
+  - name: "iron-bolt"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [1.5719999999999998, 1.49, 0]
+    scale: [0.022, 0.095, 0.095]
+    rotation: [0, 0, 0]
+  - name: "iron-bolt"
+    kind: "block"
+    material: "IRON_BLOCK"
+    position: [1.5719999999999998, 1.49, 1.93]
+    scale: [0.022, 0.095, 0.095]
+    rotation: [0, 0, 0]
+  - name: "buried-gold-fill"
+    kind: "block"
+    material: "GOLD_BLOCK"
+    position: [0, 1.63, 0]
+    scale: [2.55, 0.86, 3.55]
+    rotation: [0, 0, 0]
+  - name: "bed-0-0"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6549211718317722, 2.0793511226230565, -0.14016424708450628]
+    scale: [0.5077842347127798, 0.5077842347127798, 0.5077842347127798]
+    rotation: [90.54369356090436, 0, -97.07314556663096]
+  - name: "bed-0-1"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.1375826343034542, 2.08172703279563, 1.0627295953062348]
+    scale: [0.4800459202529183, 0.4800459202529183, 0.4800459202529183]
+    rotation: [88.23651751154439, 0, 148.5842959483602]
+  - name: "bed-0-2"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.5378638567794094, 2.0779168226468574, -1.4655636008416562]
+    scale: [0.44580062765962075, 0.44580062765962075, 0.44580062765962075]
+    rotation: [90.82639438773498, 0, -137.84789728321135]
+  - name: "bed-0-3"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.6354228481846619, 2.0757642957007643, -1.0638991381451306]
+    scale: [0.44662989539640874, 0.44662989539640874, 0.44662989539640874]
+    rotation: [90.2937695186634, 0, -144.5556754866391]
+  - name: "bed-0-4"
+    kind: "item"
+    material: "DIAMOND"
+    position: [1.0167513646999689, 2.0864390946694096, -1.4460113911146169]
+    scale: [0.5062649905938089, 0.5062649905938089, 0.5062649905938089]
+    rotation: [87.36892243613019, 0, -3.3067768161521656]
+  - name: "bed-0-5"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.642382803256401, 2.0754603121724635, 0.5878786292338027]
+    scale: [0.4307223071412708, 0.4307223071412708, 0.4307223071412708]
+    rotation: [90.38236597628597, 0, -111.61714741963627]
+  - name: "bed-0-6"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.5637619325887331, 2.124478255117888, -0.6306303783695912]
+    scale: [0.46329687677797343, 0.46329687677797343, 0.46329687677797343]
+    rotation: [92.90707517549176, 0, -55.60847210883669]
+  - name: "bed-0-7"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.2314446124265619, 2.1124607781893614, 1.02664266831562]
+    scale: [0.4700251555074301, 0.4700251555074301, 0.4700251555074301]
+    rotation: [88.9085673989175, 0, 125.5133520278232]
+  - name: "bed-0-8"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.9998700342100179, 2.1534347578189936, -0.6012717742174604]
+    scale: [0.44702907840283834, 0.44702907840283834, 0.44702907840283834]
+    rotation: [90.96462069122937, 0, 163.22298057802533]
+  - name: "bed-0-9"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.2073662015759475, 2.078132763910604, -1.0839693753531465]
+    scale: [0.43666689505659495, 0.43666689505659495, 0.43666689505659495]
+    rotation: [91.43397483208197, 0, 168.97784834764008]
+  - name: "bed-0-10"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.609255346964164, 2.1177042902476826, 0.18726808817091659]
+    scale: [0.441747658412896, 0.441747658412896, 0.441747658412896]
+    rotation: [87.61971086340485, 0, -59.1705677150657]
+  - name: "bed-0-11"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6297727653365388, 2.0865288070045387, 1.481947365807946]
+    scale: [0.480357635918992, 0.480357635918992, 0.480357635918992]
+    rotation: [92.77533780961518, 0, -47.469417605035545]
+  - name: "bed-0-12"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [1.0322797384068907, 2.0785282859796137, 1.427124325086654]
+    scale: [0.4500759607019221, 0.4500759607019221, 0.4500759607019221]
+    rotation: [89.0500916678961, 0, 40.90100111967047]
+  - name: "bed-0-13"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.19653471399418818, 2.109540221602921, -1.4876857586517434]
+    scale: [0.45549826407807914, 0.45549826407807914, 0.45549826407807914]
+    rotation: [88.55778099678655, 0, -167.26101815909448]
+  - name: "bed-0-14"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-1.0418666540083161, 2.0774664872427535, 1.0254437175384086]
+    scale: [0.43265872880625744, 0.43265872880625744, 0.43265872880625744]
+    rotation: [90.7591847546252, 0, -71.88965517531945]
+  - name: "bed-0-15"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.2238184401531944, 2.0796783256255154, -0.18357190833135403]
+    scale: [0.48251929099278223, 0.48251929099278223, 0.48251929099278223]
+    rotation: [91.01323132089037, 0, 144.8598694187806]
+  - name: "bed-0-16"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.5865284796709682, 2.0765150167301525, 1.4932964816914966]
+    scale: [0.46767178480917576, 0.46767178480917576, 0.46767178480917576]
+    rotation: [89.66881286537071, 0, -28.899320172337468]
+  - name: "bed-0-17"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.2571814033671265, 2.169371397656331, -0.680959645597812]
+    scale: [0.5021109161532666, 0.5021109161532666, 0.5021109161532666]
+    rotation: [88.25351576560733, 0, -14.07918515390179]
+  - name: "bed-0-18"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.9933887339444337, 2.0810844593924376, -0.6488492835828759]
+    scale: [0.43475274520046986, 0.43475274520046986, 0.43475274520046986]
+    rotation: [92.10762568799694, 0, -117.47523578232469]
+  - name: "bed-0-19"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.9768211959821469, 2.1099474192252248, -1.058772923783476]
+    scale: [0.5023175980008833, 0.5023175980008833, 0.5023175980008833]
+    rotation: [91.98954005344278, 0, -155.61407358576383]
+  - name: "bed-0-20"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6388951566345525, 2.0833702177827442, -1.463103402136849]
+    scale: [0.4313905594897628, 0.4313905594897628, 0.4313905594897628]
+    rotation: [87.7040664841216, 0, 101.79817545622393]
+  - name: "bed-0-21"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.24220947732341233, 2.197589941768092, -1.063364180940391]
+    scale: [0.49072840957641856, 0.49072840957641856, 0.49072840957641856]
+    rotation: [90.00609934183318, 0, -69.34751471290912]
+  - name: "bed-0-22"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.16986799377610512, 2.0778060813809276, 0.198221318289872]
+    scale: [0.46361256884029345, 0.46361256884029345, 0.46361256884029345]
+    rotation: [89.44334849325911, 0, 106.69215407270286]
+  - name: "bed-0-23"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.6078538116208937, 2.1062710495726447, -1.0526465466655888]
+    scale: [0.43026508295538396, 0.43026508295538396, 0.43026508295538396]
+    rotation: [87.8196711454945, 0, 15.846601207711984]
+  - name: "bed-0-24"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-1.0319215687200889, 2.1128783736340577, -0.21037514213085706]
+    scale: [0.47718759863716065, 0.47718759863716065, 0.47718759863716065]
+    rotation: [90.98075855469303, 0, -134.06389676146807]
+  - name: "bed-0-25"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.9836789473550666, 2.0829272127445773, -1.5314350236070893]
+    scale: [0.47793883941683013, 0.47793883941683013, 0.47793883941683013]
+    rotation: [87.61167522793478, 0, -86.9008434398327]
+  - name: "bed-0-26"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-1.030701040231474, 2.11531805050046, 0.5723720715859857]
+    scale: [0.4892436556432789, 0.4892436556432789, 0.4892436556432789]
+    rotation: [91.19277982290764, 0, 73.67340090122073]
+  - name: "bed-0-27"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.2249354697865498, 2.108356611072165, 1.5044711784432732]
+    scale: [0.4405519503203429, 0.4405519503203429, 0.4405519503203429]
+    rotation: [90.81380337204027, 0, 17.106256745577127]
+  - name: "bed-0-28"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.9186244844784787, 2.1363925042605088, -1.028148958967259]
+    scale: [0.45039310407117616, 0.45039310407117616, 0.45039310407117616]
+    rotation: [89.00174114852021, 0, 50.67447468590831]
+  - name: "bed-0-29"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.9834896508591718, 2.09998432280748, 1.091376947877287]
+    scale: [0.44689943571628266, 0.44689943571628266, 0.44689943571628266]
+    rotation: [87.96728031388979, 0, 4.710635706902991]
+  - name: "bed-0-30"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6042646440966453, 2.147959389681178, 0.9901114782900712]
+    scale: [0.47743153652518155, 0.47743153652518155, 0.47743153652518155]
+    rotation: [91.71125448876779, 0, 162.8569104372325]
+  - name: "bed-0-31"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9757917416609121, 2.08199866051123, 0.6729964535187095]
+    scale: [0.4985886733754334, 0.4985886733754334, 0.4985886733754334]
+    rotation: [91.72752598374731, 0, -5.633483181891336]
+  - name: "bed-0-32"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.17406378375724807, 2.22842660840245, -1.4492074154210606]
+    scale: [0.46424409792092103, 0.46424409792092103, 0.46424409792092103]
+    rotation: [89.98593853157317, 0, -130.07894984943124]
+  - name: "bed-0-33"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.5931993379453347, 2.119069870649551, 0.5907425866592322]
+    scale: [0.5091268002192505, 0.5091268002192505, 0.5091268002192505]
+    rotation: [92.83014476239013, 0, 107.8404694050991]
+  - name: "bed-0-34"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.5521332664211417, 2.0836075901304363, -0.6436408686929312]
+    scale: [0.4647449651918273, 0.4647449651918273, 0.4647449651918273]
+    rotation: [87.62315641217542, 0, 45.73348789599001]
+  - name: "bed-0-35"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.21092796058022756, 2.1178483032132553, -0.595547979917169]
+    scale: [0.45885216465884093, 0.45885216465884093, 0.45885216465884093]
+    rotation: [90.25791097095582, 0, 139.77711995882566]
+  - name: "bed-0-36"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.21693196790014396, 2.1407763574113936, 1.5052004942876474]
+    scale: [0.49749661034422527, 0.49749661034422527, 0.49749661034422527]
+    rotation: [88.51090126776236, 0, -0.8442197308945651]
+  - name: "bed-0-37"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.600248829423752, 2.168269899545495, 0.23377591632403472]
+    scale: [0.49451272863356055, 0.49451272863356055, 0.49451272863356055]
+    rotation: [92.02487110759284, 0, 156.211393538033]
+  - name: "bed-0-38"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.9801867191101569, 2.0764540189657854, -0.208810045046177]
+    scale: [0.46930277819696675, 0.46930277819696675, 0.46930277819696675]
+    rotation: [90.23889936160123, 0, -167.57855812804672]
+  - name: "bed-0-39"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.6108210035588827, 2.111053885380199, -0.26740617388679794]
+    scale: [0.502283234417531, 0.502283234417531, 0.502283234417531]
+    rotation: [92.77363743246782, 0, -99.31115267964518]
+  - name: "bed-0-40"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.2079701948933244, 2.152466791634987, 0.6335594153152424]
+    scale: [0.5032178841445473, 0.5032178841445473, 0.5032178841445473]
+    rotation: [88.69261114329262, 0, -2.480626799648377]
+  - name: "bed-0-41"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.15746495737738017, 2.080027026921092, -0.2332288870497074]
+    scale: [0.45302582651922574, 0.45302582651922574, 0.45302582651922574]
+    rotation: [88.22815875622138, 0, -2.9775581800174393]
+  - name: "bed-0-42"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [1.0132699755316728, 2.2055526420121323, 0.1827456761818876]
+    scale: [0.4413056503902456, 0.4413056503902456, 0.4413056503902456]
+    rotation: [87.68193262787317, 0, -135.96153143670315]
+  - name: "bed-0-43"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.1843857241119266, 2.106047192211218, 0.2151460756274624]
+    scale: [0.4819718788043009, 0.4819718788043009, 0.4819718788043009]
+    rotation: [91.92583593335014, 0, 50.09969988666546]
+  - name: "bed-0-44"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.977377351538427, 2.122222372610253, 1.4071052112841118]
+    scale: [0.48746691748633525, 0.48746691748633525, 0.48746691748633525]
+    rotation: [89.88823863938084, 0, -8.961257185578518]
+  - name: "bed-0-45"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-1.0147463045440799, 2.15560281685648, 0.19253788497403104]
+    scale: [0.4392098723639042, 0.4392098723639042, 0.4392098723639042]
+    rotation: [92.0338295516647, 0, 147.93848910000577]
+  - name: "bed-0-46"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.625876614882088, 2.1353183003758502, 1.0279972478653934]
+    scale: [0.4921486485140129, 0.4921486485140129, 0.4921486485140129]
+    rotation: [91.56463409569282, 0, -72.2536712648312]
+  - name: "bed-0-47"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-0.18952132488886697, 2.18445206732163, 0.6603603182884202]
+    scale: [0.4606716117528429, 0.4606716117528429, 0.4606716117528429]
+    rotation: [89.73217299387522, 0, 158.77487030695363]
+  - name: "bed-1-0"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6332683140436264, 2.158004318858744, -0.189690004492779]
+    scale: [0.49702831233833766, 0.49702831233833766, 0.49702831233833766]
+    rotation: [87.424614046204, 0, 108.1821104006367]
+  - name: "bed-1-1"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.16028675125494732, 2.144331383336007, 1.0837825822155338]
+    scale: [0.4704948720817099, 0.4704948720817099, 0.4704948720817099]
+    rotation: [88.8146704062154, 0, 177.3946152823102]
+  - name: "bed-1-2"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.5880273330969694, 2.1121377495031055, -1.4673914067653449]
+    scale: [0.4979660499323518, 0.4979660499323518, 0.4979660499323518]
+    rotation: [89.7115440330565, 0, 45.69811941410282]
+  - name: "bed-1-3"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.6169331853596409, 2.2305484034282914, -1.0308148449531764]
+    scale: [0.4456597407635413, 0.4456597407635413, 0.4456597407635413]
+    rotation: [92.48041606802981, 0, -177.54643177842743]
+  - name: "bed-1-4"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.9838245989678, 2.127230549930682, -1.4464450810645453]
+    scale: [0.44445370739116813, 0.44445370739116813, 0.44445370739116813]
+    rotation: [90.44000055073498, 0, -160.31423770913324]
+  - name: "bed-1-5"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.5928261027226552, 2.2187741658027345, 0.5852998594064985]
+    scale: [0.46469732836898026, 0.46469732836898026, 0.46469732836898026]
+    rotation: [91.53258443806578, 0, -138.93066365180832]
+  - name: "bed-1-6"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.5833459699325263, 2.250022909063804, -0.6945905871598239]
+    scale: [0.45776065064771343, 0.45776065064771343, 0.45776065064771343]
+    rotation: [91.05923630837839, 0, 163.52012099087437]
+  - name: "bed-1-7"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.1727317198417088, 2.181014145029374, 1.0299060302146918]
+    scale: [0.48445397554325303, 0.48445397554325303, 0.48445397554325303]
+    rotation: [90.1423413675837, 0, -169.0716775773612]
+  - name: "bed-1-8"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-1.004775060474396, 2.1856075668333093, -0.6027356086367561]
+    scale: [0.4935964623594192, 0.4935964623594192, 0.4935964623594192]
+    rotation: [91.56273385833337, 0, -138.93278805353054]
+  - name: "bed-1-9"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.18030464957071757, 2.2288020483057673, -1.0116419959655447]
+    scale: [0.4482555062148489, 0.4482555062148489, 0.4482555062148489]
+    rotation: [88.63107055171217, 0, 175.07162135841452]
+  - name: "bed-1-10"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.5917446517600184, 2.1979049047419252, 0.17184149079839395]
+    scale: [0.5082611032983184, 0.5082611032983184, 0.5082611032983184]
+    rotation: [92.0398184123591, 0, -82.02571306810351]
+  - name: "bed-1-11"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-0.6517224761603378, 2.1537895255175217, 1.4579471111357867]
+    scale: [0.47675183691715706, 0.47675183691715706, 0.47675183691715706]
+    rotation: [89.76123683887583, 0, 85.9455390801059]
+  - name: "bed-1-12"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [1.001428338484366, 2.114523812949276, 1.4652255745298939]
+    scale: [0.4412567162277259, 0.4412567162277259, 0.4412567162277259]
+    rotation: [87.2670631367588, 0, -54.482993056322016]
+  - name: "bed-1-13"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.17182608876026623, 2.1515267635119204, -1.5096256504797203]
+    scale: [0.45718649583321525, 0.45718649583321525, 0.45718649583321525]
+    rotation: [92.79990507774053, 0, 25.79327695428242]
+  - name: "bed-1-14"
+    kind: "item"
+    material: "EMERALD"
+    position: [-1.0120724642719057, 2.177762823528399, 0.9941653666407783]
+    scale: [0.47425926184413336, 0.47425926184413336, 0.47425926184413336]
+    rotation: [87.10197180152994, 0, 115.44626849559376]
+  - name: "bed-1-15"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.18286083666223346, 2.1465360544450824, -0.18675717996720248]
+    scale: [0.5080725162983177, 0.5080725162983177, 0.5080725162983177]
+    rotation: [90.44930265919169, 0, 87.81050503800151]
+  - name: "bed-1-16"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.6049654872293159, 2.166299969418244, 1.4174487179048132]
+    scale: [0.509708107985088, 0.509708107985088, 0.509708107985088]
+    rotation: [89.20094130427782, 0, -142.97273008405097]
+  - name: "bed-1-17"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.2711268711722881, 2.283759084193911, -0.6190967968530284]
+    scale: [0.46070010675021805, 0.46070010675021805, 0.46070010675021805]
+    rotation: [87.32684669469795, 0, 127.2598862744897]
+  - name: "bed-1-18"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9726950104642502, 2.1197211925887403, -0.5830963374264041]
+    scale: [0.4823184738372177, 0.4823184738372177, 0.4823184738372177]
+    rotation: [88.9628706156943, 0, -144.6367246181455]
+  - name: "bed-1-19"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.9883029563454375, 2.2232441866648394, -1.0698896638260094]
+    scale: [0.4886527874460148, 0.4886527874460148, 0.4886527874460148]
+    rotation: [90.04769672594395, 0, -102.66985152653322]
+  - name: "bed-1-20"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6645018164398571, 2.1238978411872353, -1.4236954615779471]
+    scale: [0.471694465198253, 0.471694465198253, 0.471694465198253]
+    rotation: [90.79431671985716, 0, -160.409848330507]
+  - name: "bed-1-21"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.20923659251615967, 2.262518496471044, -1.0849353778778033]
+    scale: [0.504953738665189, 0.504953738665189, 0.504953738665189]
+    rotation: [90.63143269182957, 0, 55.63210078253533]
+  - name: "bed-1-22"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.18557665323550068, 2.1218863437370676, 0.1750429317135917]
+    scale: [0.5015853077957338, 0.5015853077957338, 0.5015853077957338]
+    rotation: [92.34090461577051, 0, -102.49251516403729]
+  - name: "bed-1-23"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.6138091652747178, 2.16605818805584, -1.0992094485072839]
+    scale: [0.502433231401786, 0.502433231401786, 0.502433231401786]
+    rotation: [87.87952457159535, 0, 27.34912841914786]
+  - name: "bed-1-24"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-1.052646993462379, 2.203346170690082, -0.19377963754059155]
+    scale: [0.4520128093587636, 0.4520128093587636, 0.4520128093587636]
+    rotation: [92.14851552922939, 0, 173.8989406884417]
+  - name: "bed-1-25"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.9544838631241309, 2.2531058846298726, -1.5167540542598206]
+    scale: [0.467113564109566, 0.467113564109566, 0.467113564109566]
+    rotation: [89.63158519807834, 0, 154.28867015146028]
+  - name: "bed-1-26"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-1.021044621611905, 2.173128515403719, 0.5595689875345338]
+    scale: [0.5083324243950293, 0.5083324243950293, 0.5083324243950293]
+    rotation: [92.13452766960896, 0, -29.871128075530578]
+  - name: "bed-1-27"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.21452848610790023, 2.197979280751653, 1.454257872256777]
+    scale: [0.4842533783020512, 0.4842533783020512, 0.4842533783020512]
+    rotation: [89.77637633025905, 0, 96.42107002712731]
+  - name: "bed-1-28"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.931410797147885, 2.1984027896634815, -1.0854382033934589]
+    scale: [0.4833155844711998, 0.4833155844711998, 0.4833155844711998]
+    rotation: [91.22239707849891, 0, -3.84629415483343]
+  - name: "bed-1-29"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9823136200009888, 2.165229323072994, 1.0981164499820941]
+    scale: [0.4807174587543382, 0.4807174587543382, 0.4807174587543382]
+    rotation: [91.6069887513106, 0, -164.60438832955518]
+  - name: "bed-1-30"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.576538541902149, 2.1865810686431892, 1.046524891694547]
+    scale: [0.45032888722283304, 0.45032888722283304, 0.45032888722283304]
+    rotation: [91.11156418493039, 0, 55.43400480734158]
+  - name: "bed-1-31"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9720929703129385, 2.151677904973485, 0.6643739477500322]
+    scale: [0.500415055291369, 0.500415055291369, 0.500415055291369]
+    rotation: [91.51253993658723, 0, -14.194717158014953]
+  - name: "bed-1-32"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-0.19296351043371118, 2.2952247819499267, -1.4434723416304687]
+    scale: [0.48947876545827396, 0.48947876545827396, 0.48947876545827396]
+    rotation: [88.72152335622461, 0, -11.614701970278162]
+  - name: "bed-1-33"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.5411422948655704, 2.1848619475466253, 0.6382286092208785]
+    scale: [0.4870080369048545, 0.4870080369048545, 0.4870080369048545]
+    rotation: [88.84898679259479, 0, 57.366723873555344]
+  - name: "bed-1-34"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.5453753082006139, 2.1608673295013614, -0.6450487749933191]
+    scale: [0.4839558003154728, 0.4839558003154728, 0.4839558003154728]
+    rotation: [92.41727881279009, 0, -66.89501193462245]
+  - name: "bed-1-35"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.17604320222809167, 2.1803559402702857, -0.6272160807258366]
+    scale: [0.4343441758517254, 0.4343441758517254, 0.4343441758517254]
+    rotation: [90.39325886427321, 0, 91.30600766720164]
+  - name: "bed-1-36"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.2169156525238555, 2.1835274287525275, 1.4995181479972872]
+    scale: [0.4978020393351943, 0.4978020393351943, 0.4978020393351943]
+    rotation: [92.46131514920373, 0, -24.253270368192034]
+  - name: "bed-1-37"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.5825538533658143, 2.2169876870723866, 0.2640655922466437]
+    scale: [0.49133063840302726, 0.49133063840302726, 0.49133063840302726]
+    rotation: [90.79689057829765, 0, -142.5402180300157]
+  - name: "bed-1-38"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9842124426450295, 2.2290413831229197, -0.18041749429498485]
+    scale: [0.43921818067349777, 0.43921818067349777, 0.43921818067349777]
+    rotation: [90.02293552681763, 0, -78.21325627480125]
+  - name: "bed-1-39"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.5916304257670562, 2.2576352582609305, -0.25711354080060667]
+    scale: [0.4848817188375508, 0.4848817188375508, 0.4848817188375508]
+    rotation: [89.04960460816326, 0, -145.94280731122416]
+  - name: "bed-1-40"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.1937797347704226, 2.2176487106946015, 0.5855461496288134]
+    scale: [0.46163230503464986, 0.46163230503464986, 0.46163230503464986]
+    rotation: [87.02514052210418, 0, 1.3501404615374213]
+  - name: "bed-1-41"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.22207706737663224, 2.1894723738566175, -0.22161343688410165]
+    scale: [0.49988964154183413, 0.49988964154183413, 0.49988964154183413]
+    rotation: [87.97553487499636, 0, -47.104711584972506]
+  - name: "bed-1-42"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9894323879921875, 2.268468554369192, 0.2240153641819679]
+    scale: [0.46350741325934686, 0.46350741325934686, 0.46350741325934686]
+    rotation: [87.208716823471, 0, -131.68324716783758]
+  - name: "bed-1-43"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.2163558947159241, 2.2518321666420524, 0.15500174552637322]
+    scale: [0.4882446320187026, 0.4882446320187026, 0.4882446320187026]
+    rotation: [91.89622284515977, 0, 101.4874525263682]
+  - name: "bed-1-44"
+    kind: "item"
+    material: "EMERALD"
+    position: [-1.0159413719656896, 2.152440814611622, 1.4444823375570963]
+    scale: [0.436788066759521, 0.436788066759521, 0.436788066759521]
+    rotation: [90.01442023596533, 0, -38.6327666931156]
+  - name: "bed-1-45"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-0.9876847107350996, 2.2298722469452037, 0.18573596928640956]
+    scale: [0.47415468900693347, 0.47415468900693347, 0.47415468900693347]
+    rotation: [90.07969777345387, 0, 6.5943197589053]
+  - name: "bed-1-46"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.6145445700507867, 2.199548850203335, 1.0403631561679592]
+    scale: [0.497119506044435, 0.497119506044435, 0.497119506044435]
+    rotation: [90.7550301221922, 0, 156.0249880157076]
+  - name: "bed-1-47"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.14773660283311238, 2.2544136042872376, 0.6561483887394964]
+    scale: [0.46131927767753206, 0.46131927767753206, 0.46131927767753206]
+    rotation: [91.30351796563878, 0, -154.42882616687027]
+  - name: "accent-0"
+    kind: "block"
+    material: "GOLD_BLOCK"
+    position: [-0.86, 2.368048378911891, 1.06]
+    scale: [0.49, 0.49, 0.49]
+    rotation: [2, -12, 4]
+  - name: "accent-1"
+    kind: "block"
+    material: "DIAMOND_BLOCK"
+    position: [-0.28, 2.4095229519611454, 0.78]
+    scale: [0.58, 0.58, 0.58]
+    rotation: [0, 10, -4]
+  - name: "accent-2"
+    kind: "block"
+    material: "EMERALD_BLOCK"
+    position: [0.45, 2.389918181972791, 0.72]
+    scale: [0.52, 0.52, 0.52]
+    rotation: [-5, 12, 3]
+  - name: "accent-3"
+    kind: "block"
+    material: "GOLD_BLOCK"
+    position: [0.88, 2.38, -0.24]
+    scale: [0.56, 0.56, 0.56]
+    rotation: [0, -8, 0]
+  - name: "accent-4"
+    kind: "block"
+    material: "DIAMOND_BLOCK"
+    position: [0.35, 2.478582412770976, -0.73]
+    scale: [0.58, 0.58, 0.58]
+    rotation: [9, -18, -8]
+  - name: "accent-5"
+    kind: "block"
+    material: "EMERALD_BLOCK"
+    position: [-0.8, 2.4496294089920165, -0.61]
+    scale: [0.56, 0.56, 0.56]
+    rotation: [0, -20, 17]
+  - name: "accent-6"
+    kind: "block"
+    material: "EMERALD_BLOCK"
+    position: [0.18, 2.31, -1.34]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [0, 8, 0]
+  - name: "accent-7"
+    kind: "block"
+    material: "GOLD_BLOCK"
+    position: [0.72, 2.34, -1.34]
+    scale: [0.48, 0.48, 0.48]
+    rotation: [0, -10, 0]
+  - name: "loose-0-0"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.09544642595485246, 2.231361020844336, -0.21016265065254913]
+    scale: [0.46916004245497706, 0.46916004245497706, 0.46916004245497706]
+    rotation: [91.17458962775078, 2.0235740246996707, -142.4031565107191]
+  - name: "loose-0-1"
+    kind: "item"
+    material: "EMERALD"
+    position: [-1.0319219309996928, 2.2902873642612778, -1.3754926382973314]
+    scale: [0.45735851982818765, 0.45735851982818765, 0.45735851982818765]
+    rotation: [88.19672167262421, 2.239931052848269, -154.71942132971995]
+  - name: "loose-0-2"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.1560580946672096, 2.29002057133444, 0.11346483860118907]
+    scale: [0.5122924411361668, 0.5122924411361668, 0.5122924411361668]
+    rotation: [85.7555650621066, -1.965492974807553, 41.93338012546715]
+  - name: "loose-0-4"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [0.3362398776240735, 2.238474050075815, 1.3333112915733192]
+    scale: [0.4600986238542815, 0.4600986238542815, 0.4600986238542815]
+    rotation: [86.49741655859647, 0.9733384235883271, -132.3887927661538]
+  - name: "loose-0-5"
+    kind: "item"
+    material: "NETHERITE_INGOT"
+    position: [-0.5372032413702181, 2.3278366306007183, -1.4894016973493684]
+    scale: [0.4290246692421335, 0.4290246692421335, 0.4290246692421335]
+    rotation: [91.12074468511685, 0.04483641700594099, -56.302151941722386]
+  - name: "loose-0-9"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.8158043041214567, 2.233376033746804, -0.10778741659985938]
+    scale: [0.41000351132370716, 0.41000351132370716, 0.41000351132370716]
+    rotation: [88.57592448879069, -1.9280536839297044, -87.90043585784713]
+  - name: "loose-0-10"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.23730591706454918, 2.5622994721923122, -1.3251717748343577]
+    scale: [0.4743930213156768, 0.4743930213156768, 0.4743930213156768]
+    rotation: [83.0509633754299, -2.494556327237801, -52.24724686114604]
+  - name: "loose-0-13"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.157184346198056, 2.3181515691724766, 0.09023519239670208]
+    scale: [0.4028963210614354, 0.4028963210614354, 0.4028963210614354]
+    rotation: [85.85546402514035, 0.8521778031340492, 30.201102275791555]
+  - name: "loose-0-16"
+    kind: "item"
+    material: "EMERALD"
+    position: [-1.0343232735412522, 2.251969511905186, 0.4611122006538212]
+    scale: [0.5077663448921843, 0.5077663448921843, 0.5077663448921843]
+    rotation: [94.4307886207983, 2.0254571079063597, 98.15043132761429]
+  - name: "loose-0-17"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6636007301342023, 2.2703207560811736, 0.08987901199213694]
+    scale: [0.4491644624480802, 0.4491644624480802, 0.4491644624480802]
+    rotation: [89.11836586632785, 1.6034946549555773, -45.31677759126518]
+  - name: "loose-0-18"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.9835958129120014, 2.3071764137125865, 0.060464856669872974]
+    scale: [0.46690614421267573, 0.46690614421267573, 0.46690614421267573]
+    rotation: [95.0191201454103, -0.01675734981323096, 159.57154779054798]
+  - name: "loose-0-20"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.5374292770130223, 2.2824645386530626, 0.21482365472740786]
+    scale: [0.4171475038165869, 0.4171475038165869, 0.4171475038165869]
+    rotation: [91.01043292617392, 0.79015682489133, -24.4993880406179]
+  - name: "loose-0-25"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.17670851634345242, 2.6356246881368657, -0.7218892916898518]
+    scale: [0.509344233317577, 0.509344233317577, 0.509344233317577]
+    rotation: [86.56211292463686, -1.937177734780006, -121.57107178209174]
+  - name: "loose-0-26"
+    kind: "item"
+    material: "EMERALD"
+    position: [-0.1579929806396888, 2.22195146930978, 1.2634216537371652]
+    scale: [0.43174800678164005, 0.43174800678164005, 0.43174800678164005]
+    rotation: [90.83503059262551, -0.2936042376734074, 175.17197935442744]
+  - name: "loose-0-27"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.15301631765517998, 2.658127846580065, -0.9534379627435777]
+    scale: [0.44586230932354165, 0.44586230932354165, 0.44586230932354165]
+    rotation: [83.22112845750698, 0.07367667446164017, -118.40789806184945]
+  - name: "loose-0-29"
+    kind: "item"
+    material: "EMERALD"
+    position: [1.0055187331051432, 2.212057247743223, 0.8390703924222309]
+    scale: [0.5118158602834294, 0.5118158602834294, 0.5118158602834294]
+    rotation: [93.37828737954041, -2.6860105320619354, 125.73797531860788]
+  - name: "loose-0-31"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.10583249419990765, 2.290961469082317, -0.27282809475854763]
+    scale: [0.46310689408030925, 0.46310689408030925, 0.46310689408030925]
+    rotation: [84.61687098436518, -0.9943158863180006, -13.562867352549688]
+  - name: "loose-0-34"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.5555353336991509, 2.2905106248564713, 1.3264630272721836]
+    scale: [0.5038176711178505, 0.5038176711178505, 0.5038176711178505]
+    rotation: [92.2056350175666, 0.6147154055694699, 137.61470284919022]
+  - name: "loose-0-35"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9800671401635981, 2.2237724934471443, 1.1988510566737394]
+    scale: [0.48856117087105144, 0.48856117087105144, 0.48856117087105144]
+    rotation: [96.18778853954598, -0.3622464534210992, -158.81508224345347]
+  - name: "loose-0-37"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [1.0383428976820568, 2.3116211269930784, 0.2979471638481796]
+    scale: [0.4716773487862421, 0.4716773487862421, 0.4716773487862421]
+    rotation: [85.59339484356316, 1.3421167450284601, 47.72546671029576]
+  - name: "loose-0-46"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.9646379233337753, 2.36165996916798, 0.4377158581184719]
+    scale: [0.4992068023043498, 0.4992068023043498, 0.4992068023043498]
+    rotation: [89.86619746146397, -0.8517953411123322, 29.49175959126171]
+  - name: "loose-1-0"
+    kind: "item"
+    material: "EMERALD"
+    position: [0.021980707847901168, 2.3299355957418197, -0.2066956108869229]
+    scale: [0.48779487357764734, 0.48779487357764734, 0.48779487357764734]
+    rotation: [83.88132069090548, -1.435704753692181, 15.84654112027485]
+  - name: "loose-1-1"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.9110486608910291, 2.3289884692068257, -1.4342901716395784]
+    scale: [0.515000313659852, 0.515000313659852, 0.515000313659852]
+    rotation: [85.49225954149038, 0.7177882242105209, -101.99251232852083]
+  - name: "loose-1-2"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.20264214156614851, 2.3568974846009594, 0.11991080233114373]
+    scale: [0.48300668923889045, 0.48300668923889045, 0.48300668923889045]
+    rotation: [84.97768524657651, -2.962845945456674, -1.2214229860976218]
+  - name: "loose-1-4"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.30979361377757414, 2.339349024510279, 1.3497632582008348]
+    scale: [0.4010724437053971, 0.4010724437053971, 0.4010724437053971]
+    rotation: [83.85474781516612, -2.844565172068992, 48.50545821306622]
+  - name: "loose-1-5"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.5601448371490625, 2.5953706965705976, -1.4440476588637128]
+    scale: [0.5022489038992045, 0.5022489038992045, 0.5022489038992045]
+    rotation: [85.47317450396613, 1.5441511590533405, -113.13174328999537]
+  - name: "loose-1-13"
+    kind: "item"
+    material: "DIAMOND"
+    position: [0.1468634776907558, 2.3914409547476065, 0.02196196449884416]
+    scale: [0.48494545078036966, 0.48494545078036966, 0.48494545078036966]
+    rotation: [83.48228721458113, 1.1235250737679783, -131.58850343688889]
+  - name: "loose-1-16"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.9282908710247586, 2.2973764320813257, 0.557237754352671]
+    scale: [0.414945429408046, 0.414945429408046, 0.414945429408046]
+    rotation: [89.11041576938699, 2.356082803455882, 43.27531682160972]
+  - name: "loose-1-17"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.6975755234714851, 2.355038832735226, 0.11008901728035532]
+    scale: [0.46641388266116895, 0.46641388266116895, 0.46641388266116895]
+    rotation: [83.53420739866355, -1.5811806048906665, -72.628353259639]
+  - name: "loose-1-18"
+    kind: "item"
+    material: "EMERALD"
+    position: [-1.009620646478514, 2.401732057834433, 0.16187168808389085]
+    scale: [0.4154408618574674, 0.4154408618574674, 0.4154408618574674]
+    rotation: [93.51351616561044, 0.43764186922359327, -83.71527717333656]
+  - name: "loose-1-24"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-1.0089643212175368, 2.6830110639354112, -1.1063184615679562]
+    scale: [0.5085234141914182, 0.5085234141914182, 0.5085234141914182]
+    rotation: [85.77710502608637, 0.20128661216259713, -159.48378642805517]
+  - name: "loose-1-26"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.2707011787832274, 2.266983262019508, 1.283527754327916]
+    scale: [0.4572845104939117, 0.4572845104939117, 0.4572845104939117]
+    rotation: [84.76356799387734, 0.25166495130406874, -84.58058465533593]
+  - name: "loose-1-29"
+    kind: "item"
+    material: "DIAMOND"
+    position: [1.0112411710855906, 2.3941515054232476, 0.8139899989787297]
+    scale: [0.4818981283540371, 0.4818981283540371, 0.4818981283540371]
+    rotation: [89.39284732849146, -2.5973026508571886, 1.7381066385453607]
+  - name: "loose-1-31"
+    kind: "item"
+    material: "DIAMOND"
+    position: [-0.205820177282036, 2.6791107967082266, -0.31658965605969946]
+    scale: [0.4319054904848014, 0.4319054904848014, 0.4319054904848014]
+    rotation: [90.68102955274699, 0.758852376429636, 84.08662053109788]
+  - name: "loose-1-34"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.6894224797495919, 2.378652195762678, 1.2610890145511924]
+    scale: [0.4865336769120382, 0.4865336769120382, 0.4865336769120382]
+    rotation: [93.0022096437207, 2.3477774992714124, 141.36014916567268]
+  - name: "loose-1-35"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [1.0065243385732119, 2.42901492210786, 1.230352696329761]
+    scale: [0.4027533832140488, 0.4027533832140488, 0.4027533832140488]
+    rotation: [87.34456733325908, 0.8394618315755116, -28.695323046736206]
+  - name: "loose-1-37"
+    kind: "item"
+    material: "DIAMOND"
+    position: [1.039141414763851, 2.4071365255760315, 0.30004686430016053]
+    scale: [0.46353214517165225, 0.46353214517165225, 0.46353214517165225]
+    rotation: [95.19170240699208, -1.501601561128541, 91.51673492681437]
+  - name: "loose-1-39"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [-0.6400318677113579, 2.7209092031423308, -1.052843937037721]
+    scale: [0.46725226196505276, 0.46725226196505276, 0.46725226196505276]
+    rotation: [84.38784150299584, 0.0961073681550575, 151.6707851541542]
+  - name: "loose-1-46"
+    kind: "item"
+    material: "GOLD_INGOT"
+    position: [0.9812928760436608, 2.4424399000956716, 0.42859278995033145]
+    scale: [0.4122291727829094, 0.4122291727829094, 0.4122291727829094]
+    rotation: [91.56397180600128, 1.4646389064610439, 21.019743075108295]
+  - name: "heart-0"
+    kind: "item"
+    material: "PAPER"
+    position: [-1.0, 2.7457618804868584, 0.66]
+    scale: [0.47, 0.47, 0.47]
+    rotation: [-48, 0, -14]
+    item-model: "deruy:transport_heart"
+  - name: "heart-1"
+    kind: "item"
+    material: "PAPER"
+    position: [-0.7, 2.824133640239846, -0.29]
+    scale: [0.47, 0.47, 0.47]
+    rotation: [-48, 0, 14]
+    item-model: "deruy:transport_heart"
+  - name: "heart-2"
+    kind: "item"
+    material: "PAPER"
+    position: [0.18, 2.6600474453874026, -1.48]
+    scale: [0.47, 0.47, 0.47]
+    rotation: [-48, 0, -5]
+    item-model: "deruy:transport_heart"
+  - name: "heart-3"
+    kind: "item"
+    material: "PAPER"
+    position: [0.86, 2.7763990086909835, -0.74]
+    scale: [0.47, 0.47, 0.47]
+    rotation: [-48, 0, 12]
+    item-model: "deruy:transport_heart"
+  - name: "heart-4"
+    kind: "item"
+    material: "PAPER"
+    position: [0.06, 2.415361225045158, 1.39]
+    scale: [0.47, 0.47, 0.47]
+    rotation: [-48, 0, -10]
+    item-model: "deruy:transport_heart"
+  - name: "star-0"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [-0.9, 2.660064222857527, 1.22]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-71.81957946042131, 0, 1.3455837759400389]
+  - name: "star-1"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [-0.92, 2.4489823831321047, 0.11]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-81.00649340124014, 0, 2.245786631450727]
+  - name: "star-2"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [-0.36, 2.70903977896728, -0.6]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-89.31768523977257, 0, 19.016869567279322]
+  - name: "star-3"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [0.15, 2.4655498885249605, -0.14]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-73.2820822189559, 0, -23.172053847254954]
+  - name: "star-4"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [0.94, 2.631390989278123, -1.22]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-72.35681744005882, 0, 9.18602129323169]
+  - name: "star-5"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [0.7, 2.4609942243463507, 1.37]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-85.27278339042213, 0, -4.567309897465467]
+  - name: "star-6"
+    kind: "item"
+    material: "NETHER_STAR"
+    position: [-0.11, 2.7528699549457696, -1.5]
+    scale: [0.42, 0.42, 0.42]
+    rotation: [-76.07986993407674, 0, 4.6767098307102515]

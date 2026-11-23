@@ -132,7 +132,7 @@ public final class TransportManager implements Listener {
     private void arrive() throws IOException {raid.arrive(current);railMode=false;railShapes=Map.of();Bukkit.broadcastMessage("§c♥ [하트 운송전] §a운송이 완료되었습니다.");runningRoute=null;if(task!=null){task.cancel();task=null;} // Keep the model until remove/next preview.
     }
     public void preview(Location where){if(running())throw new IllegalArgumentException("운송을 먼저 stop 하세요.");stop();Location l=where.clone();l.setPitch(0);spawn(l);}
-    private void spawn(Location at){try{hold(at);displays.addAll(model.spawn(at));current=at.clone();}catch(RuntimeException e){stop();throw e;}}
+    private void spawn(Location at){try{hold(at);displays.addAll(model.spawn(at));damageStage=-1;current=at.clone();}catch(RuntimeException e){stop();throw e;}}
     private void move(Location at){hold(at);for(Display d:displays)if(!d.teleport(at))throw new IllegalStateException("디스플레이 이동이 차단되었습니다.");current=at.clone();raid.move(at);}
     private void hold(Location at){Set<Chunk> needed=new HashSet<>();int cx=at.getBlockX()>>4,cz=at.getBlockZ()>>4;for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++){Chunk c=at.getWorld().getChunkAt(cx+dx,cz+dz);needed.add(c);if(!tickets.contains(c)&&c.addPluginChunkTicket(plugin))tickets.add(c);}
         for(Chunk c:new HashSet<>(tickets))if(!needed.contains(c)){c.removePluginChunkTicket(plugin);tickets.remove(c);}
@@ -141,6 +141,9 @@ public final class TransportManager implements Listener {
     public void stop(){raid.clear();railMode=false;railShapes=Map.of();if(task!=null){task.cancel();task=null;}runningRoute=null;displays.forEach(Entity::remove);displays.clear();for(Chunk c:tickets)c.removePluginChunkTicket(plugin);tickets.clear();current=null;}
     public void shutdown(){stop();rewards.shutdown();}
     public int entityCount(){return displays.size();}
+    private int damageStage=-1;
+    /** 체력 비율에 맞춰 수레 모델을 손상 단계로 바꾼다. 단계가 바뀔 때만 교체·효과음. */
+    public void applyDamage(double ratio){int s=model.stageFor(ratio);if(s==damageStage)return;boolean worse=s>damageStage;damageStage=s;model.apply(displays,s);if(worse&&current!=null){current.getWorld().playSound(current,Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR,1f,.8f);current.getWorld().spawnParticle(Particle.BLOCK,current.clone().add(0,1.5,0),40,1.2,.5,1.6,0,Material.SPRUCE_PLANKS.createBlockData());}}
     private void cleanup(Chunk c){for(Entity e:c.getEntities())if(e.getScoreboardTags().contains(WagonModel.TAG)&&!raid.owns(e.getUniqueId())&&displays.stream().noneMatch(d->d.getUniqueId().equals(e.getUniqueId())))e.remove();}
     @EventHandler public void onChunkLoad(ChunkLoadEvent event){cleanup(event.getChunk());}
 }
