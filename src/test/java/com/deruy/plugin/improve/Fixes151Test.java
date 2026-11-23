@@ -77,6 +77,22 @@ class Fixes151Test {
         assertTrue(b.getProgress("red").contains(0), "인벤토리에 있는 아이템도 칸 완료");
     }
 
+    @Test void bingoShutdownKeepsStateAndDottedTeamNames() throws Exception {
+        var cells = new ArrayList<BingoCell>();
+        for (int i = 0; i < 4; i++) cells.add(new BingoCell(BingoCell.Type.ITEM, i == 0 ? "CRAFTING_TABLE" : "BEACON"));
+        var b = runningBingo(cells, 2);
+        var p = server.addPlayer();
+        b.setTeam(p, "red.blue");
+        b.checkItem(p, Material.CRAFTING_TABLE);
+        b.shutdown();                                // 정상 종료·리로드
+        assertFalse(b.isRunning());
+        assertNotNull(data.section("bingo.state"), "종료해도 저장 상태 유지");
+        var again = new BingoManager(plugin);
+        assertTrue(again.restoreState());
+        assertTrue(again.getProgress("red.blue").contains(0), "점 들어간 팀 이름도 진행도 유지");
+        assertTrue(again.getProgress("red").isEmpty(), "이름이 갈라져 빈 팀이 생기지 않음");
+    }
+
     @Test void bingoSurvivesRestart() throws Exception {
         var cells = new ArrayList<BingoCell>();
         for (int i = 0; i < 4; i++) cells.add(new BingoCell(BingoCell.Type.ITEM, i == 0 ? "CRAFTING_TABLE" : "BEACON"));

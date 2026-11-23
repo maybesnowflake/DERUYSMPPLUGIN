@@ -332,10 +332,26 @@ public class BingoManager implements GameEvent {
         for (BingoCell c : board) cells.add(c.getType() + ":" + c.getValue());
         ds.set("bingo.state.board", cells);
         ds.set("bingo.state.milestones", lineMilestones);
-        teamProgress.forEach((t, p) -> ds.set("bingo.state.progress." + t, new ArrayList<>(p)));
-        announcedMilestones.forEach((t, p) -> ds.set("bingo.state.announced." + t, new ArrayList<>(p)));
+        // 팀 이름에 '.' 이 들어가도 경로가 갈라지지 않게 이름을 값으로 저장한다.
+        Set<String> teams = new java.util.LinkedHashSet<>(teamProgress.keySet());
+        teams.addAll(announcedMilestones.keySet());
+        List<Map<String, Object>> records = new ArrayList<>();
+        for (String t : teams) {
+            Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("name", t);
+            r.put("progress", new ArrayList<>(teamProgress.getOrDefault(t, Set.of())));
+            r.put("announced", new ArrayList<>(announcedMilestones.getOrDefault(t, Set.of())));
+            records.add(r);
+        }
+        ds.set("bingo.state.teams", records);
         ds.set("bingo.state.finished", new ArrayList<>(finishedTeams));
         ds.save();
+    }
+
+    private static Set<Integer> ints(Object raw) {
+        Set<Integer> out = new HashSet<>();
+        if (raw instanceof List<?> list) for (Object o : list) if (o instanceof Number n) out.add(n.intValue());
+        return out;
     }
 
     /** onEnable 에서 호출: 저장된 진행 중 빙고가 있으면 이어서 */
@@ -354,10 +370,12 @@ public class BingoManager implements GameEvent {
         lineMilestones = new ArrayList<>(st.getIntegerList("milestones"));
         if (lineMilestones.isEmpty()) reloadMilestones();
         teamProgress.clear(); announcedMilestones.clear(); finishedTeams.clear();
-        var prog = st.getConfigurationSection("progress");
-        if (prog != null) for (String t : prog.getKeys(false)) teamProgress.put(t, new HashSet<>(prog.getIntegerList(t)));
-        var ann = st.getConfigurationSection("announced");
-        if (ann != null) for (String t : ann.getKeys(false)) announcedMilestones.put(t, new HashSet<>(ann.getIntegerList(t)));
+        for (Map<?, ?> r : st.getMapList("teams")) {
+            if (!(r.get("name") instanceof String t)) continue;
+            teamProgress.put(t, ints(r.get("progress")));
+            Set<Integer> announced = ints(r.get("announced"));
+            if (!announced.isEmpty()) announcedMilestones.put(t, announced);
+        }
         finishedTeams.addAll(st.getStringList("finished"));
         running = true;
         startScan();
