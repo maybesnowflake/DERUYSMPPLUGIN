@@ -15,23 +15,39 @@ public final class WagonModel {
     public static final String TAG = "deruy_transport_display";
     public record Part(String name, String kind, Material material, String model,
                        float x, float y, float z, float sx, float sy, float sz,
-                       float rx, float ry, float rz) {
-        public Matrix4f matrix() { return matrix(0,0,0); }
-        /** tilt: 바닥 중심(0,0,0)을 축으로 전체를 기울임(도). */
-        public Matrix4f matrix(float tx, float ty, float tz) {
+                       float rx, float ry, float rz, boolean spin) {
+        public Part(String name, String kind, Material material, String model, float x, float y, float z,
+                    float sx, float sy, float sz, float rx, float ry, float rz) {
+            this(name, kind, material, model, x, y, z, sx, sy, sz, rx, ry, rz, false);
+        }
+        public Matrix4f matrix() { return matrix(0,0,0,0); }
+        public Matrix4f matrix(float tx, float ty, float tz) { return matrix(tx,ty,tz,0); }
+        /** tilt: 바닥 중심(0,0,0)을 축으로 전체를 기울임(도). spinX: 이 파트 자체를 x축으로 더 돌림(바퀴). */
+        public Matrix4f matrix(float tx, float ty, float tz, float spinX) {
             Matrix4f m = new Matrix4f()
                 .rotateXYZ((float)Math.toRadians(tx),(float)Math.toRadians(ty),(float)Math.toRadians(tz))
                 .translate(x,y,z)
-                .rotateXYZ((float)Math.toRadians(rx),(float)Math.toRadians(ry),(float)Math.toRadians(rz))
+                .rotateXYZ((float)Math.toRadians(rx+spinX),(float)Math.toRadians(ry),(float)Math.toRadians(rz))
                 .scale(sx,sy,sz);
             // BlockDisplay has its origin in the corner; ItemDisplay is centered.
             return kind.equals("block") ? m.translate(-.5f,-.5f,-.5f) : m;
         }
     }
-    /** 체력 비율이 below 이하일 때 아이템 모델 교체 + 기울기. */
-    public record Stage(double below, String model, float tx, float ty, float tz) {}
+    /** 체력 비율이 below 이하일 때 아이템 모델 교체 + 기울기. parts: 파트 이름별 모델 덮어쓰기("none" = 숨김). */
+    public record Stage(double below, String model, float tx, float ty, float tz, Map<String,String> parts) {
+        public Stage(double below, String model, float tx, float ty, float tz) { this(below, model, tx, ty, tz, Map.of()); }
+    }
+    /** 움직임 연출: wobble[0]=멀쩡, wobble[i+1]=i번째 손상 단계의 흔들림(도). */
+    public record Motion(float[] wobble, double wheelRadius, int spinDirection) {
+        public static final Motion NONE = new Motion(new float[]{0}, .5, 1);
+        public float wobbleFor(int stage) { return wobble.length == 0 ? 0 : wobble[Math.clamp(stage + 1, 0, wobble.length - 1)]; }
+    }
     private final List<Part> parts;
     private final List<Stage> stages;
+    private Motion motion = Motion.NONE;
+    public Motion motion() { return motion; }
+    /** 바퀴나 흔들림이 있을 때만 이동마다 변환을 갱신 (블록 238개 조립판은 갱신 안 함 → 패킷 절약) */
+    public boolean animated() { return motion != Motion.NONE || parts.stream().anyMatch(Part::spin); }
     public WagonModel(JavaPlugin plugin) throws IOException {
         File file = new File(plugin.getDataFolder(),"transport-model.yml");
         if (!file.exists()) plugin.saveResource("transport-model.yml",false);
@@ -39,6 +55,36 @@ public final class WagonModel {
         if (!new File(plugin.getDataFolder(),"transport-model-blocks.yml").exists()) plugin.saveResource("transport-model-blocks.yml",false);
         parts = read(file);
         stages = readStages(file);
+        motion = readMotion(file);
+    }
+    public static Motion readMotion(File file) throws IOException {
+        YamlConfiguration c = new YamlConfiguration();
+        try { c.load(file); } catch (Exception e) { throw new IOException("모델 설정 오류: "+e.getMessage(),e); }
+        if (!c.isConfigurationSection("motion")) return Motion.NONE;
+        List<Double> w = c.getDoubleList("motion.wobble-degrees");
+        float[] wobble = new float[w.size()];
+        for (int i = 0; i < wobble.length; i++) { double v = w.get(i); if (!(v >= 0 && v <= 15)) throw new IOException("motion.wobble-degrees 는 0~15도"); wobble[i] = (float) v; }
+        double r = c.getDouble("motion.wheel-radius", .5);
+        if (!(r > .05 && r < 5)) throw new IOException("motion.wheel-radius 는 0.05~5");
+        int dir = c.getInt("motion.spin-direction", 1);
+        if (dir != 1 && dir != -1) throw new IOException("motion.spin-direction 은 1 또는 -1");
+        return new Motion(wobble, r, dir);
+    }
+    /** 굴러간 거리(블록) → 바퀴 회전각(도). */
+    public static float spinDegrees(double travelled, double radius, int direction) {
+        return (float) (direction * Math.toDegrees(travelled / radius) % 360.0);
+    }
+    /** 굴러간 거리에 따른 몸체 흔들림 [x(앞뒤), z(좌우)] (도). 두 주기를 섞어 덜 기계적으로. */
+    public static float[] wobble(double travelled, float amplitude) {
+        if (amplitude <= 0) return new float[]{0, 0};
+        return new float[]{(float) (amplitude * .5 * Math.sin(travelled * 3.3 + 1)), (float) (amplitude * Math.sin(travelled * 2.1))};
+    }
+    /** 이 파트가 이 단계에서 쓸 아이템 모델. null = 숨김. */
+    static String modelFor(Part p, Stage st) {
+        if (st == null) return p.model;
+        String override = st.parts().get(p.name);
+        if (override != null) return override.equalsIgnoreCase("none") ? null : override;
+        return p.spin || p.model.isEmpty() ? p.model : st.model();
     }
     /** 테스트·외부 도구용 */
     public WagonModel(List<Part> parts, List<Stage> stages) { this.parts=List.copyOf(parts); this.stages=List.copyOf(stages); }
@@ -53,7 +99,13 @@ public final class WagonModel {
             if(NamespacedKey.fromString(model)==null) throw new IOException("damage-stages.item-model 오류: "+p);
             float[] tilt=p.containsKey("tilt")?vector(p.get("tilt")):new float[3];
             for(float t:tilt) if(Math.abs(t)>45) throw new IOException("damage-stages.tilt 는 ±45도 이내");
-            out.add(new Stage(b.doubleValue(),model,tilt[0],tilt[1],tilt[2]));
+            Map<String,String> overrides=new LinkedHashMap<>();
+            if(p.get("parts") instanceof Map<?,?> m) for(var e:m.entrySet()) {
+                String v=Objects.toString(e.getValue(),"");
+                if(!v.equalsIgnoreCase("none")&&NamespacedKey.fromString(v)==null) throw new IOException("damage-stages.parts 모델 오류: "+e);
+                overrides.put(Objects.toString(e.getKey()),v);
+            }
+            out.add(new Stage(b.doubleValue(),model,tilt[0],tilt[1],tilt[2],Map.copyOf(overrides)));
         }
         out.sort(Comparator.comparingDouble(Stage::below).reversed());
         return List.copyOf(out);
@@ -64,18 +116,31 @@ public final class WagonModel {
         for(int i=0;i<stages.size();i++) if(ratio<=stages.get(i).below()) found=i;
         return found;
     }
-    /** 아이템 모델이 지정된 파트만 손상 단계 모델로 바꾼다. displays 는 spawn() 이 돌려준 순서 그대로. */
-    public void apply(List<Display> displays, int stage) {
+    /** 손상 단계 모델로 바꾼다(몸체·바퀴·숨김). displays 는 spawn() 이 돌려준 순서 그대로. */
+    public void apply(List<Display> displays, int stage) { apply(displays, stage, 0); }
+    public void apply(List<Display> displays, int stage, double travelled) {
         Stage st = stage<0||stage>=stages.size()?null:stages.get(stage);
         for(int i=0;i<parts.size()&&i<displays.size();i++) {
             Part p=parts.get(i);
             if(!p.kind.equals("item")||p.model.isEmpty()||!(displays.get(i) instanceof ItemDisplay d)) continue;
-            ItemStack item=new ItemStack(p.material);
-            String key=st==null?p.model:st.model();
-            item.editMeta(m->m.setItemModel(NamespacedKey.fromString(key)));
+            String key=modelFor(p,st);
+            ItemStack item=new ItemStack(key==null?Material.AIR:p.material);
+            if(key!=null) item.editMeta(m->m.setItemModel(NamespacedKey.fromString(key)));
             d.setItemStack(item);
-            d.setInterpolationDelay(0); d.setInterpolationDuration(6);
-            d.setTransformationMatrix(st==null?p.matrix():p.matrix(st.tx(),st.ty(),st.tz()));
+        }
+        pose(displays, stage, travelled, 6);
+    }
+    /** 이동할 때마다: 바퀴는 굴러간 만큼 돌고, 나머지는 단계별 기울기 + 흔들림. */
+    public void pose(List<Display> displays, int stage, double travelled, int interpolationTicks) {
+        Stage st = stage<0||stage>=stages.size()?null:stages.get(stage);
+        float tx = st==null?0:st.tx(), ty = st==null?0:st.ty(), tz = st==null?0:st.tz();
+        float[] w = wobble(travelled, motion.wobbleFor(stage));
+        float spin = spinDegrees(travelled, motion.wheelRadius(), motion.spinDirection());
+        for(int i=0;i<parts.size()&&i<displays.size();i++) {
+            Part p=parts.get(i); Display d=displays.get(i);
+            d.setInterpolationDelay(0); d.setInterpolationDuration(interpolationTicks);
+            // 바퀴는 땅에 붙어 있어야 하므로 흔들림 없이 기울기만
+            d.setTransformationMatrix(p.spin ? p.matrix(tx,ty,tz,spin) : p.matrix(tx+w[0],ty,tz+w[1]));
         }
     }
     public static List<Part> read(File file) throws IOException {
@@ -91,7 +156,8 @@ public final class WagonModel {
             for (float n:scale) if(n<=0||n>16) throw new IOException("모델 scale 범위 오류");
             String model=Objects.toString(p.get("item-model"),"");
             if(!model.isEmpty() && NamespacedKey.fromString(model)==null) throw new IOException("item-model 오류");
-            result.add(new Part(Objects.toString(p.get("name")),kind,material,model,pos[0],pos[1],pos[2],scale[0],scale[1],scale[2],rot[0],rot[1],rot[2]));
+            boolean spin=Boolean.TRUE.equals(p.get("spin"));
+            result.add(new Part(Objects.toString(p.get("name")),kind,material,model,pos[0],pos[1],pos[2],scale[0],scale[1],scale[2],rot[0],rot[1],rot[2],spin));
         }
         if(result.isEmpty()||result.size()>400)throw new IOException("모델은 1~400개 요소가 필요합니다.");
         return List.copyOf(result);

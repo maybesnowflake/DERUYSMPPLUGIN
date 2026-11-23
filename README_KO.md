@@ -133,6 +133,27 @@ supplydrop:
 시작·종료·구역 설정 등 변경 명령은 기존 `.admin` 권한(기본 OP)이 필요합니다.
 랜덤 보급 예정 시각은 조회로 공개하지 않습니다.
 
+## 추가 기능 (2026-11-23)
+
+### 하트 운송전 수레
+- 리소스팩 `resourcepack/DERUY_TreasureWagon` 필요 (1.21.11). 몸체 1개 + 바퀴 4개 디스플레이.
+- **손상 단계**: 남은 체력 75% / 50% / 25% 이하가 되면 모델이 부서진 모습으로 바뀜 (`transport-model.yml` → `damage-stages`). 25%는 앞왼쪽 바퀴가 빠지고 기울어짐.
+- **보물 흘림**: 단계가 나빠질 때마다 남은 보물 중 `spill-per-stage`(기본 15%)를 바닥에 쏟음. 쏟은 만큼 파괴 드롭이 줄어듦. 줍기 권한은 파괴 드롭과 같음 (`transport-game.yml`).
+- **움직임**: 바퀴가 굴러간 거리만큼 돌고, 몸체가 단계별로 더 흔들림 (`motion.wobble-degrees`). 바퀴가 거꾸로 돌면 `motion.spin-direction: -1`.
+- 리소스팩 없는 서버는 `transport-model-blocks.yml` 내용으로 바꾸고 `/transport reload`.
+
+### 랜덤 이벤트 보스바
+- 추첨 중(노란색) / 진행 중 이벤트 이름 + 남은 시간(빨간색). `random-events.bossbar: false` 로 끔.
+
+### `/deruy status` (권한 `deruy.admin`, 기본 OP)
+- 라이프스틸·KOTH·슈퍼KOTH·바운티·보급·슈퍼보급·랜덤 이벤트·하트 운송전·질문타임·빙고·로케이터바·타임라인 상태를 한 화면에.
+
+### 영상 편집용 타임라인
+- `plugins/DeruyPlugin/timeline/YYYY-MM-DD.csv` 에 초 단위 시각으로 기록. 엑셀로 바로 열림(UTF-8 BOM).
+- 종류: `KILL` `DEATH` `HEART` `RANDOM_EVENT_START/END` `KOTH_START/CAPTURE/END` `BOUNTY_KILL` `SUPPLY_DROP` `TRANSPORT_START/DAMAGE/DESTROYED/ARRIVED`
+- `/deruy timeline [YYYY-MM-DD]` 으로 건수·파일 위치 확인. `timeline.enabled: false` 로 끔.
+- 녹화 시작 시각과 비교하면 하이라이트 위치를 바로 찾을 수 있음.
+
 ## 빌드와 검증
 
 Java 21 + Maven에서 프로젝트 폴더 안에서:

@@ -138,6 +138,7 @@ public class SupplyDropManager implements GameEvent {
         long durationTicks = durationMinutes * 60L * 20L;
 
         Bukkit.broadcastMessage("§6§l[서플라이드랍] §e보급 상자들이 앞으로 " + durationMinutes + "분간 흩뿌려집니다! (총 " + count + "개)");
+        com.deruy.plugin.timeline.Timeline.log(plugin, "SUPPLY_DROP", "일반", count + "개 / " + durationMinutes + "분", null);
 
         for (int i = 0; i < count; i++) {
             long delay = ThreadLocalRandom.current().nextLong(0, Math.max(1, durationTicks));

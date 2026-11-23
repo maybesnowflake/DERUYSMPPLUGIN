@@ -14,10 +14,10 @@ class TreasureWagonModelTest {
 
     @Test void defaultModelIsResourcePackItem() throws IOException {
         var parts = WagonModel.read(resource("transport-model.yml"));
-        assertEquals(1, parts.size());
+        assertEquals(5, parts.size(), "몸체 + 바퀴 4");
         var p = parts.getFirst();
         assertEquals("item", p.kind());
-        assertEquals("deruy:treasure_wagon", p.model());
+        assertEquals("deruy:treasure_wagon_body", p.model());
         assertEquals(3.0f, p.y(), 1e-6);
         assertEquals(2.0f, p.sx(), 1e-6);
     }
@@ -28,10 +28,10 @@ class TreasureWagonModelTest {
         var m = new WagonModel(WagonModel.read(resource("transport-model.yml")), stages);
         assertEquals(-1, m.stageFor(1.0));
         assertEquals(-1, m.stageFor(0.76));
-        assertEquals("deruy:treasure_wagon_75", stages.get(m.stageFor(0.75)).model());
-        assertEquals("deruy:treasure_wagon_50", stages.get(m.stageFor(0.5)).model());
-        assertEquals("deruy:treasure_wagon_50", stages.get(m.stageFor(0.3)).model());
-        assertEquals("deruy:treasure_wagon_25", stages.get(m.stageFor(0.01)).model());
+        assertEquals("deruy:treasure_wagon_75_body", stages.get(m.stageFor(0.75)).model());
+        assertEquals("deruy:treasure_wagon_50_body", stages.get(m.stageFor(0.5)).model());
+        assertEquals("deruy:treasure_wagon_50_body", stages.get(m.stageFor(0.3)).model());
+        assertEquals("deruy:treasure_wagon_25_body", stages.get(m.stageFor(0.01)).model());
     }
 
     @Test void tiltZeroKeepsOldMatrix() throws IOException {

@@ -159,9 +159,11 @@ DECK = "block/dark_oak_planks"
 IRON = "block/iron_block"
 HUB = "block/polished_deepslate"
 
-def wheel(md, cx, cz, broken=0, wobble=0, tag="wheel"):
-    """살 달린 바퀴. broken: 0 멀쩡, 1 살 하나 빠짐, 2 테 일부·살 빠짐."""
-    cy, R, th, w = 0.52, 0.50, 0.10, 0.07
+WHEEL_Y = 0.52   # 바퀴 중심 높이(블록)
+
+def wheel(md, cx, cz, broken=0, wobble=0, tag="wheel", cy=WHEEL_Y):
+    """살 달린 바퀴. broken: 0 멀쩡, 1 살 하나 빠짐, 2 테 일부·살 빠짐. cx=0 이면 따로 도는 바퀴 모델(양쪽 대칭)."""
+    R, th, w = 0.50, 0.10, 0.07
     side = 1 if cx > 0 else -1
     x0, x1 = (cx - w, cx + w)
     o = (cx, cy, cz)
@@ -191,8 +193,9 @@ def wheel(md, cx, cz, broken=0, wobble=0, tag="wheel"):
         box(md, a, b, LOG, rot=("x", ang, o) if ang else None, tag=tag)
     box(md, (cx - .11, cy - .12, cz - .12), (cx + .11, cy + .12, cz + .12), HUB, tag=tag)
     box(md, (cx - .10, cy - .12, cz - .12), (cx + .10, cy + .12, cz + .12), HUB, rot=("x", 45, o), tag=tag)
-    pa = cx + side * 0.11
-    box(md, (min(pa, pa + side * .05), cy - .05, cz - .05), (max(pa, pa + side * .05), cy + .05, cz + .05), IRON, tag=tag)
+    for sd in ((1, -1) if cx == 0 else (side,)):
+        pa = cx + sd * 0.11
+        box(md, (min(pa, pa + sd * .05), cy - .05, cz - .05), (max(pa, pa + sd * .05), cy + .05, cz + .05), IRON, tag=tag)
 
 def lantern(md, x, z, side_z, tag="lantern"):
     """기둥에서 뻗은 쇠 팔 + 사슬 + 매달린 랜턴(빛남)."""
@@ -207,8 +210,8 @@ def heavy_core(md, c, size, rot=None, tag="loot"):
     vanilla_embed(md, VANM + "/heavy_core.json", {"all": "block/heavy_core"}, (c[0], c[1] + size / 4, c[2]), size, rot=rot, tag=tag)
 
 # ── 조립 ────────────────────────────────────────
-def build(stage):
-    """stage: 100, 75, 50, 25 (남은 체력 %)"""
+def build(stage, wheels=True):
+    """stage: 100, 75, 50, 25 (남은 체력 %). wheels=False 면 바퀴를 빼고 몸체만(바퀴는 따로 도는 모델)."""
     md = Model()
     rnd = random.Random(7)
     dmg = {100: 0, 75: 1, 50: 2, 25: 3}[stage]
@@ -221,7 +224,7 @@ def build(stage):
             if dmg >= 1 and cx > 0 and cz < 0: br = 1
             if dmg >= 2 and cx < 0 and cz < 0: br = 2
             if dmg >= 3 and cx > 0 and cz > 0: br = 2
-            wheel(md, cx, cz, br)
+            if wheels: wheel(md, cx, cz, br)
     # 차축·베어링
     for cz in (-1.3, 1.3):
         lo = -1.40 if not (dmg >= 3 and cz > 0) else -0.9
@@ -427,10 +430,25 @@ def write(md, name):
     json.dump({"model": {"type": "minecraft:model", "model": f"deruy:item/{name}"}}, open(f"{base}/items/{name}.json", "w"), indent=2)
     return len(md.els)
 
+def build_wheel(broken):
+    """따로 도는 바퀴: 모델 중심(8,8,8) = 바퀴 중심."""
+    global Y_CENTER
+    old = Y_CENTER
+    Y_CENTER = WHEEL_Y
+    md = Model()
+    wheel(md, 0.0, 0.0, broken)
+    Y_CENTER = old
+    return md
+
 if __name__ == "__main__":
     counts = {}
     for st, name in ((100, "treasure_wagon"), (75, "treasure_wagon_75"), (50, "treasure_wagon_50"), (25, "treasure_wagon_25")):
-        counts[name] = write(build(st), name)
+        counts[name] = write(build(st), name)                       # 바퀴 포함(한 덩어리, 예전 방식)
+        counts[name + "_body"] = write(build(st, wheels=False), name + "_body")   # 바퀴 없는 몸체
+    for br, name in ((0, "wagon_wheel"), (1, "wagon_wheel_b1"), (2, "wagon_wheel_b2")):
+        Y_CENTER = WHEEL_Y
+        counts[name] = write(build_wheel(br), name)
+        Y_CENTER = 3.0
     # 모든 텍스처를 블록·아이템 아틀라스 양쪽에 등록 (1.21.11은 item/·gui/ 텍스처가 블록 아틀라스에 없음)
     sources = [{"type": "minecraft:single", "resource": v} for v in sorted(set(T.values()))]
     os.makedirs(f"{OUT}/assets/minecraft/atlases", exist_ok=True)
