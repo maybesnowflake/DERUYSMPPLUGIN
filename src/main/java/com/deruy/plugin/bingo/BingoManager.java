@@ -166,6 +166,14 @@ public class BingoManager implements GameEvent {
         Bukkit.broadcastMessage("§d§l빙고 §e이벤트가 종료되었습니다.");
     }
 
+    /** 서버 종료·리로드용: 타이머만 멈추고 판·진행은 data.yml 에 남겨 켜질 때 이어서 한다. */
+    public void shutdown() {
+        if (!running) return;
+        if (scanTask != null) { scanTask.cancel(); scanTask = null; }
+        saveState();
+        running = false;
+    }
+
     @Override
     public boolean isRunning() {
         return running;

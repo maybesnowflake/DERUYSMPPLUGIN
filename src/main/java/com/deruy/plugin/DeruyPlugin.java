@@ -343,7 +343,7 @@ public class DeruyPlugin extends JavaPlugin {
         if (kothManager != null) kothManager.stopScheduler();
         if (superKothManager != null) superKothManager.stopScheduler();
         if (locatorBarManager != null && locatorBarManager.isRunning()) locatorBarManager.shutdown(); // 켜 둔 설정 유지
-        if (bingoManager != null && bingoManager.isRunning()) bingoManager.stop();
+        if (bingoManager != null) bingoManager.shutdown(); // 상태는 남겨 재시작 후 이어서
         if (supplyDropManager != null) supplyDropManager.stop();
         if (superSupplyDropManager != null) superSupplyDropManager.stop();
         if (bountyManager != null && bountyManager.isRunning()) bountyManager.shutdown(); // 페어 저장 유지
