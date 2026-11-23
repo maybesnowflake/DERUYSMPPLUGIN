@@ -102,6 +102,10 @@ public class DeruyPlugin extends JavaPlugin {
 
     private com.deruy.plugin.lifesteal.HeartAuditLog heartAuditLog;
     public com.deruy.plugin.lifesteal.HeartAuditLog getHeartAuditLog() { return heartAuditLog; }
+    private com.deruy.plugin.timeline.Timeline timeline;
+    /** 영상 편집용 타임라인 (테스트 등에서 null 일 수 있음 → Timeline.log 사용) */
+    public com.deruy.plugin.timeline.Timeline getTimeline() { return timeline; }
+    public com.deruy.plugin.transport.TransportManager getTransportManager() { return transportManager; }
     private boolean worldGuardPresent;
     private boolean voiceChatPresent;
 
@@ -110,6 +114,7 @@ public class DeruyPlugin extends JavaPlugin {
         saveDefaultConfig();
         com.deruy.plugin.config.ConfigValidator.validate(getConfig());
         heartAuditLog = new com.deruy.plugin.lifesteal.HeartAuditLog(this);
+        timeline = new com.deruy.plugin.timeline.Timeline(this);
 
         worldGuardPresent = Bukkit.getPluginManager().getPlugin("WorldGuard") != null;
 
@@ -168,6 +173,7 @@ public class DeruyPlugin extends JavaPlugin {
         pm.registerEvents(new DragonListener(this), this);             // 드래곤 체력/알
         pm.registerEvents(new MiscRuleListener(this), this);           // 토템/사망이펙트/화살
         pm.registerEvents(new com.deruy.plugin.misc.CelebrationFireworkListener(), this); // 축하 폭죽 피해 차단
+        pm.registerEvents(new com.deruy.plugin.timeline.TimelineListener(this), this);   // 영상용 킬·사망 기록
         pm.registerEvents(new BingoListener(this), this);
         pm.registerEvents(new BingoBoardGuiListener(), this);
         pm.registerEvents(new com.deruy.plugin.supplydrop.SupplyChestProtectionListener(this), this);
@@ -276,6 +282,9 @@ public class DeruyPlugin extends JavaPlugin {
 
         getCommand("deruytime").setExecutor(new DeruyTimeCommand());
         getCommand("deruyreload").setExecutor(new DeruyReloadCommand(this));
+        var deruyCmd = new com.deruy.plugin.misc.commands.DeruyCommand(this);
+        getCommand("deruy").setExecutor(deruyCmd);
+        getCommand("deruy").setTabCompleter(deruyCmd);
 
         var autotuneCmd = new AutotuneCommand(this);
         getCommand("autotune").setExecutor(autotuneCmd);
@@ -342,6 +351,7 @@ public class DeruyPlugin extends JavaPlugin {
         if (questionTimeManager != null) questionTimeManager.stop();
         if (randomEventManager != null) randomEventManager.stopScheduler();
         if (contractManager != null) contractManager.stop();
+        if (timeline != null) timeline.close(); // 위에서 남긴 종료 기록까지 저장한 뒤 닫기
     }
 
     /**

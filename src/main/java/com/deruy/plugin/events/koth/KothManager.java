@@ -242,6 +242,7 @@ public class KothManager implements GameEvent {
         Bukkit.broadcastMessage("§6§l" + label + " §e거점점령 이벤트 " +
                 (toActivate.size() == zones.size() ? "(전체 " + zones.size() + "구역)" : "(구역 " + String.join(", ", toActivate) + ")")
                 + " 시작되었습니다! 지정 구역을 점령하세요.");
+        com.deruy.plugin.timeline.Timeline.log(plugin, "KOTH_START", label, String.join(" ", toActivate), null);
 
         if (!wasRunning) {
             task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 0L, 20L);
@@ -267,6 +268,7 @@ public class KothManager implements GameEvent {
                 task = null;
             }
             Bukkit.broadcastMessage("§6§l" + label + " §e이벤트가 종료되었습니다.");
+            com.deruy.plugin.timeline.Timeline.log(plugin, "KOTH_END", label, "", null);
             return;
         }
 
@@ -323,6 +325,7 @@ public class KothManager implements GameEvent {
 
         if (zone.getHeldTicks() >= requiredTicks) {
             Bukkit.broadcastMessage("§6§l[" + label + "-" + zone.getId() + "] §a" + playerInside.getName() + "님이 거점을 점령했습니다! 승리!");
+            com.deruy.plugin.timeline.Timeline.log(plugin, "KOTH_CAPTURE", playerInside.getName(), label + "-" + zone.getId(), playerInside.getLocation());
             plugin.spawnRainbowFirework(playerInside.getLocation());
             giveRewards(playerInside);
             zone.resetProgress();

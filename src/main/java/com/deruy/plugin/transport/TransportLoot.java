@@ -20,13 +20,16 @@ public final class TransportLoot implements Listener {
   List<ItemStack> singles=new ArrayList<>(total);for(ItemStack s:stacks)for(int i=0;i<s.getAmount();i++){ItemStack one=s.clone();one.setAmount(1);singles.add(one);}return List.copyOf(singles);
  }
  static boolean mergeAllowed(String left,String right,long leftAt,long rightAt,long now){return Objects.equals(left,right)&&now>=leftAt&&now>=rightAt;}
- public void burst(Location center,List<ItemStack> singles,List<String> groups,boolean inherited,double delay,int pickupTicks,List<String> participants) {
+ public void burst(Location center,List<ItemStack> singles,List<String> groups,boolean inherited,double delay,int pickupTicks,List<String> participants) {burst(center,singles,groups,inherited,delay,pickupTicks,participants,false);}
+ /** quiet: 손상 단계마다 조금 쏟을 때 — 폭발 대신 작은 파편·소리 */
+ public void burst(Location center,List<ItemStack> singles,List<String> groups,boolean inherited,double delay,int pickupTicks,List<String> participants,boolean quiet) {
   long until=System.currentTimeMillis()+Math.round(delay*1000);String restriction=String.join(",",groups);Random rng=new Random();
   for(int i=0;i<singles.size();i++) {
    double angle=i*Math.PI*2/singles.size()+rng.nextDouble()*.2,speed=.22+rng.nextDouble()*.28;Vector velocity=new Vector(Math.cos(angle)*speed,.30+rng.nextDouble()*.28,Math.sin(angle)*speed);
    Location at=center.clone().add(Math.cos(angle)*.25,1.4+rng.nextDouble()*.35,Math.sin(angle)*.25);
    center.getWorld().dropItem(at,singles.get(i).clone(),item->{var d=item.getPersistentDataContainer();d.set(GROUPS,PersistentDataType.STRING,restriction);if(participants!=null)d.set(PARTICIPANTS,PersistentDataType.STRING,String.join(",",participants));d.set(INHERITED,PersistentDataType.BYTE,(byte)(inherited?1:0));d.set(MERGE_AT,PersistentDataType.LONG,until);item.setPickupDelay(pickupTicks);item.setVelocity(velocity);item.setInvulnerable(true);});
   }
+  if(quiet){center.getWorld().spawnParticle(Particle.CRIT,center.clone().add(0,1.6,0),20,.8,.4,1.2,.15);center.getWorld().playSound(center,Sound.ENTITY_ITEM_BREAK,1.0f,.7f);center.getWorld().playSound(center,Sound.ENTITY_ITEM_PICKUP,.8f,.6f);return;}
   center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER,center.clone().add(0,1.4,0),1);center.getWorld().playSound(center,Sound.ENTITY_GENERIC_EXPLODE,1.0f,1.15f);
  }
  private static String groups(Item i){return i.getPersistentDataContainer().get(GROUPS,PersistentDataType.STRING);}

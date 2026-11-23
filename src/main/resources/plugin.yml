@@ -82,6 +82,10 @@ commands:
     description: 소실의 저주가 인첸트된 염소뿔 획득 (허용된 역할만)
     usage: /horn <소리번호 1~8>
     permission: deruy.horn.use
+  deruy:
+    description: DERUY 전체 상태 보기 / 영상용 타임라인 기록 확인
+    usage: /<command> status | timeline [YYYY-MM-DD]
+    permission: deruy.admin
   deruyreload:
     description: config.yml을 재시작 없이 다시 불러옴
     usage: /<command>
@@ -91,6 +95,9 @@ commands:
     usage: /heart info|set|add|remove|revive <player> [hearts]
     permission: deruy.heart.admin
 permissions:
+  deruy.admin:
+    description: /deruy status, /deruy timeline
+    default: op
   deruy.lifesteal.admin:
     default: op
   deruy.event.admin:

@@ -10,6 +10,8 @@ pickup-requires-hit: true
 health: 200
 speed: 2.0
 merge-delay-seconds: 2.0
+# 손상 단계(75/50/25%)가 나빠질 때마다 남은 보물 중 이 비율만큼 쏟음 (0이면 안 쏟음). 쏟은 만큼 파괴 드롭이 줄어듦
+spill-per-stage: 0.15
 pickup-delay-ticks: 20
 # HEART:개수, VOUCHER:티어:개수, 바닐라 MATERIAL:개수. 총합 최대 512개.
 loot:

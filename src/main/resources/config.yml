@@ -468,6 +468,8 @@ random-events:
   roulette-seconds: 5
   # 가장 빠를 때 한 칸 지나가는 간격: 2틱(0.1초) 또는 4틱(0.2초). 이후 점점 느려져 당첨 칸에 멈춤
   roulette-step-ticks: 2
+  # 화면 위 보스바에 추첨 중 / 진행 중 이벤트 이름과 남은 시간 표시
+  bossbar: true
   # 직전에 나온 이벤트는 다음 추첨에서 제외
   avoid-repeat: true
   # 당첨 확률 가중치(없으면 1). 0이면 릴에는 보이지만 당첨되지 않음. 예: LIFESTEAL: 2.0
@@ -588,3 +590,9 @@ transport:
   # pickup-groups: [raiders]
   # defender-groups: [guards]
   # arrival-claim-seconds: 180
+
+# 영상 편집용 타임라인: 킬·사망·하트 변화·랜덤 이벤트·KOTH·바운티·보급·하트 운송전을
+# plugins/DeruyPlugin/timeline/YYYY-MM-DD.csv 에 초 단위 시각과 함께 기록 (엑셀로 바로 열림)
+# /deruy timeline 으로 오늘 기록 건수·파일 위치 확인
+timeline:
+  enabled: true

@@ -20,7 +20,7 @@ import java.util.*;
 public final class TransportRaid implements Listener {
  private final DeruyPlugin plugin;private final TransportManager manager;private final TransportLoot loot;private final TransportRewards rewards;private String awaitingId;private List<String> defenders;private List<ItemStack> arrivalItems;private int claimSeconds;
  private final List<Pig> boxes=new ArrayList<>();private final Map<UUID,Integer> lastHit=new HashMap<>();private BossBar bar;
- private List<String> attackers,pickers;private List<ItemStack> singles;private boolean inherited,active,requiresHit;private double health,maxHealth,mergeDelay,speed;private int pickupTicks;
+ private List<String> attackers,pickers;private List<ItemStack> singles;private List<ItemStack> remaining=new ArrayList<>();private double spillFraction=.15;private boolean inherited,active,requiresHit;private double health,maxHealth,mergeDelay,speed;private int pickupTicks;
  public TransportRaid(DeruyPlugin plugin,TransportManager manager,TransportLoot loot){this(plugin,manager,loot,null);}
  public TransportRaid(DeruyPlugin plugin,TransportManager manager,TransportLoot loot,TransportRewards rewards){this.plugin=plugin;this.manager=manager;this.loot=loot;this.rewards=rewards;}
  public double load() throws IOException {
@@ -28,11 +28,11 @@ public final class TransportRaid implements Listener {
   // Explicit config.yml transport keys override the legacy file; missing keys keep old values.
   // Ignore embedded defaults here to preserve existing servers' transport-game.yml settings.
   var main=plugin.getConfig();
-  for(String key:List.of("health","loot","arrival-rewards","attack-groups","pickup-groups","defender-groups","arrival-claim-seconds","include-inherited-groups","pickup-requires-hit","speed","merge-delay-seconds","pickup-delay-ticks"))
+  for(String key:List.of("health","loot","arrival-rewards","attack-groups","pickup-groups","defender-groups","arrival-claim-seconds","include-inherited-groups","pickup-requires-hit","speed","merge-delay-seconds","pickup-delay-ticks","spill-per-stage"))
    if(main.contains("transport."+key,true))c.set(key,main.get("transport."+key));
   attackers=TransportGroups.validate(c.getStringList("attack-groups"));pickers=TransportGroups.validate(c.getStringList("pickup-groups"));inherited=c.getBoolean("include-inherited-groups",false);requiresHit=c.getBoolean("pickup-requires-hit",true);defenders=TransportGroups.validate(c.getStringList("defender-groups"));claimSeconds=c.getInt("arrival-claim-seconds",180);if(claimSeconds<1||claimSeconds>86400)throw new IllegalArgumentException("arrival-claim-seconds: 1~86400");
   maxHealth=bounded(c.getDouble("health",200),1,1000000,"health");speed=bounded(c.getDouble("speed",2),.1,8,"speed");mergeDelay=bounded(c.getDouble("merge-delay-seconds",2),.5,30,"merge-delay-seconds");
-  pickupTicks=c.getInt("pickup-delay-ticks",20);if(pickupTicks<0||pickupTicks>1200)throw new IllegalArgumentException("타격/습득 틱 범위 오류");
+  spillFraction=bounded(c.getDouble("spill-per-stage",.15),0,1,"spill-per-stage");pickupTicks=c.getInt("pickup-delay-ticks",20);if(pickupTicks<0||pickupTicks>1200)throw new IllegalArgumentException("타격/습득 틱 범위 오류");
   singles=parseItems(c.getStringList("loot"));arrivalItems=c.contains("arrival-rewards")?parseItems(c.getStringList("arrival-rewards")):singles;return speed;
  }
  private List<ItemStack> parseItems(List<String> entries){
@@ -46,7 +46,7 @@ public final class TransportRaid implements Listener {
  public void arrive(Location at) throws IOException {if(!active)return;if(rewards==null){clear();return;}awaitingId=rewards.create(at,arrivalItems,defenders,inherited,claimSeconds);if(bar!=null){bar.setColor(BarColor.GREEN);bar.setTitle("호위 성공! 열차를 우클릭해서 보상을 수령하세요.");}Bukkit.broadcastMessage("§a[하트 운송전] 호위 그룹은 열차를 우클릭해서 보상을 가져가세요. "+claimSeconds+"초 후 남은 보상은 전용 상자로 옮겨집니다.");}
  private static double bounded(double n,double min,double max,String key){if(!Double.isFinite(n)||n<min||n>max)throw new IllegalArgumentException(key+" 범위: "+min+"~"+max);return n;}
  public void begin(Location origin) {
-  clear();health=maxHealth;active=true;
+  clear();health=maxHealth;active=true;remaining=new ArrayList<>(singles); // 이번 수송에서 실은 보물 (쏟으면 줄어듦)
   try{for(int i=0;i<2;i++){Pig box=origin.getWorld().spawn(origin,Pig.class,e->{e.setAdult();e.setAgeLock(true);e.setBreed(false);e.setAI(false);e.setCollidable(false);e.setSilent(true);e.setInvisible(true);e.setGravity(false);e.setPersistent(false);e.setRemoveWhenFarAway(false);e.getAttribute(Attribute.SCALE).setBaseValue(3.2);e.getAttribute(Attribute.MAX_HEALTH).setBaseValue(1024);e.setHealth(1024);e.addScoreboardTag(WagonModel.TAG);});boxes.add(box);}bar=Bukkit.createBossBar("하트 열차",BarColor.RED,BarStyle.SEGMENTED_10);move(origin);}catch(RuntimeException e){clear();throw e;}
  }
  public boolean owns(UUID id){return boxes.stream().anyMatch(b->b.getUniqueId().equals(id));}
@@ -70,7 +70,22 @@ public final class TransportRaid implements Listener {
   // Both invisible bodies share one target: a sweep must not damage it twice.
   if(last!=null&&tick==last)return;lastHit.put(p.getUniqueId(),tick);health=Math.max(0,health-dealt);
   Location at=manager.currentLocation();if(at==null)return;at.getWorld().playSound(at,Sound.BLOCK_ANVIL_HIT,.55f,1.6f);at.getWorld().spawnParticle(Particle.CRIT,at.clone().add(0,1.2,0),8,.8,.4,.8,.1);if(health>0)manager.applyDamage(health/maxHealth);
-  if(health==0){List<ItemStack> drop=singles;List<String> access=pickers;boolean inherit=inherited;double delay=mergeDelay;int pickup=pickupTicks;List<String> participants=requiresHit?lastHit.keySet().stream().map(UUID::toString).sorted().toList():null;manager.stop();loot.burst(at,drop,access,inherit,delay,pickup,participants);Bukkit.broadcastMessage("§c♥ [하트 운송전] §e"+p.getName()+"§c의 공격으로 열차가 파괴되었습니다! 보물이 흩어집니다.");}else move(at);
+  if(health==0){com.deruy.plugin.timeline.Timeline.log(plugin,"TRANSPORT_DESTROYED",p.getName(),"남은 보물 "+remaining.size()+"개 흩어짐",at);List<ItemStack> drop=List.copyOf(remaining);remaining.clear();List<String> access=pickers;boolean inherit=inherited;double delay=mergeDelay;int pickup=pickupTicks;List<String> participants=requiresHit?lastHit.keySet().stream().map(UUID::toString).sorted().toList():null;manager.stop();loot.burst(at,drop,access,inherit,delay,pickup,participants);Bukkit.broadcastMessage("§c♥ [하트 운송전] §e"+p.getName()+"§c의 공격으로 열차가 파괴되었습니다! 보물이 흩어집니다.");}else move(at);
  }
+ /** 손상 단계가 나빠질 때 남은 보물 일부를 쏟는다. 줍기 권한은 파괴 드롭과 같다. @return 쏟은 개수 */
+ public int spill(Location at){
+  if(!active||at==null||remaining.isEmpty())return 0;
+  List<ItemStack> out=takeSpill(remaining,spillFraction,new Random());if(out.isEmpty())return 0;
+  List<String> participants=requiresHit?lastHit.keySet().stream().map(UUID::toString).sorted().toList():null;
+  loot.burst(at,out,pickers,inherited,mergeDelay,pickupTicks,participants,true);
+  return out.size();
+ }
+ /** 남은 것 중 비율만큼(반올림, 최소 1) 무작위로 꺼낸다. fraction 0 이면 안 꺼냄. */
+ static <T> List<T> takeSpill(List<T> remaining,double fraction,Random rng){
+  if(remaining.isEmpty()||!(fraction>0))return List.of();
+  int n=Math.min(remaining.size(),Math.max(1,(int)Math.round(remaining.size()*fraction)));
+  List<T> out=new ArrayList<>(n);for(int i=0;i<n;i++)out.add(remaining.remove(rng.nextInt(remaining.size())));return out;
+ }
+ public int remainingLoot(){return remaining.size();}
  public void clear(){awaitingId=null;active=false;boxes.forEach(Entity::remove);boxes.clear();lastHit.clear();if(bar!=null){bar.removeAll();bar=null;}}
 }

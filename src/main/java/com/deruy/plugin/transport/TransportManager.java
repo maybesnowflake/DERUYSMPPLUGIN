@@ -60,7 +60,7 @@ public final class TransportManager implements Listener {
         var rails=RailPath.inWorld(a.getWorld());var plan=RailPath.find(new RailPath.Cell(a.getBlockX(),a.getBlockY(),a.getBlockZ()),new RailPath.Cell(z.getBlockX(),z.getBlockY(),z.getBlockZ()),rails,4096);
         double speed=raid.load();Map<RailPath.Cell,org.bukkit.block.data.Rail.Shape> shapes=new HashMap<>();for(var cell:plan.cells())shapes.put(cell,rails.shape(cell));
         stop();railMode=true;railShapes=Map.copyOf(shapes);legs=List.of(new Leg(a.getWorld(),plan.path(),Math.max(20,(int)Math.ceil(plan.path().length()/speed*20)),0,0));legIndex=0;elapsed=0;dwell=0;
-        try{Location at=location(legs.getFirst(),plan.path().sample(0));spawn(at);runningRoute=id;raid.begin(at);task=Bukkit.getScheduler().runTaskTimer(plugin,this::tick,2,2);}catch(RuntimeException e){stop();throw e;}
+        try{Location at=location(legs.getFirst(),plan.path().sample(0));spawn(at);runningRoute=id;com.deruy.plugin.timeline.Timeline.log(plugin,"TRANSPORT_START",id,"",at);raid.begin(at);task=Bukkit.getScheduler().runTaskTimer(plugin,this::tick,2,2);}catch(RuntimeException e){stop();throw e;}
         Bukkit.broadcastMessage("§c♥ [하트 운송전] §e"+id+" 열차가 출발했습니다! 허용된 그룹은 열차를 공격할 수 있습니다.");
     }
     private boolean tracksIntact(Location at){
@@ -114,7 +114,7 @@ public final class TransportManager implements Listener {
         }
         boolean pointRaid=id.equals(POINT_ROUTE);if(pointRaid)raid.load();
         stop();legs=List.copyOf(built);legIndex=0;elapsed=0;dwell=0;
-        Leg first=legs.getFirst();var s=first.path.sample(0);Location at=location(first,s);spawn(at);runningRoute=id;if(pointRaid){try{raid.begin(at);}catch(RuntimeException e){stop();throw e;}}
+        Leg first=legs.getFirst();var s=first.path.sample(0);Location at=location(first,s);spawn(at);runningRoute=id;com.deruy.plugin.timeline.Timeline.log(plugin,"TRANSPORT_START",id,"",at);if(pointRaid){try{raid.begin(at);}catch(RuntimeException e){stop();throw e;}}
         task=Bukkit.getScheduler().runTaskTimer(plugin,this::tick,2,2);
         Bukkit.broadcastMessage("§c♥ [하트 운송전] §e"+id+" 노선 운송이 시작되었습니다.");
     }
@@ -129,11 +129,12 @@ public final class TransportManager implements Listener {
             if(elapsed==leg.ticks){Bukkit.broadcastMessage("§c♥ [하트 운송전] §e구역 "+leg.destination+"에 도착했습니다.");dwell=leg.waitTicks;if(dwell==0){if(legIndex==legs.size()-1)arrive();else{legIndex++;elapsed=0;}}}
         }catch(Exception e){plugin.getLogger().severe("운송 중단: "+e.getMessage());stop();}
     }
-    private void arrive() throws IOException {raid.arrive(current);railMode=false;railShapes=Map.of();Bukkit.broadcastMessage("§c♥ [하트 운송전] §a운송이 완료되었습니다.");runningRoute=null;if(task!=null){task.cancel();task=null;} // Keep the model until remove/next preview.
+    private void arrive() throws IOException {com.deruy.plugin.timeline.Timeline.log(plugin,"TRANSPORT_ARRIVED",runningRoute,"",current);raid.arrive(current);railMode=false;railShapes=Map.of();Bukkit.broadcastMessage("§c♥ [하트 운송전] §a운송이 완료되었습니다.");runningRoute=null;if(task!=null){task.cancel();task=null;} // Keep the model until remove/next preview.
     }
     public void preview(Location where){if(running())throw new IllegalArgumentException("운송을 먼저 stop 하세요.");stop();Location l=where.clone();l.setPitch(0);spawn(l);}
-    private void spawn(Location at){try{hold(at);displays.addAll(model.spawn(at));damageStage=-1;current=at.clone();}catch(RuntimeException e){stop();throw e;}}
-    private void move(Location at){hold(at);for(Display d:displays)if(!d.teleport(at))throw new IllegalStateException("디스플레이 이동이 차단되었습니다.");current=at.clone();raid.move(at);}
+    private void spawn(Location at){try{hold(at);displays.addAll(model.spawn(at));damageStage=-1;travelled=0;current=at.clone();}catch(RuntimeException e){stop();throw e;}}
+    private double travelled=0;
+    private void move(Location at){hold(at);if(current!=null&&current.getWorld().equals(at.getWorld()))travelled+=current.distance(at);for(Display d:displays)if(!d.teleport(at))throw new IllegalStateException("디스플레이 이동이 차단되었습니다.");current=at.clone();if(model.animated())model.pose(displays,damageStage,travelled,2);raid.move(at);}
     private void hold(Location at){Set<Chunk> needed=new HashSet<>();int cx=at.getBlockX()>>4,cz=at.getBlockZ()>>4;for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++){Chunk c=at.getWorld().getChunkAt(cx+dx,cz+dz);needed.add(c);if(!tickets.contains(c)&&c.addPluginChunkTicket(plugin))tickets.add(c);}
         for(Chunk c:new HashSet<>(tickets))if(!needed.contains(c)){c.removePluginChunkTicket(plugin);tickets.remove(c);}
     }
@@ -143,7 +144,7 @@ public final class TransportManager implements Listener {
     public int entityCount(){return displays.size();}
     private int damageStage=-1;
     /** 체력 비율에 맞춰 수레 모델을 손상 단계로 바꾼다. 단계가 바뀔 때만 교체·효과음. */
-    public void applyDamage(double ratio){int s=model.stageFor(ratio);if(s==damageStage)return;boolean worse=s>damageStage;damageStage=s;model.apply(displays,s);if(worse&&current!=null){current.getWorld().playSound(current,Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR,1f,.8f);current.getWorld().spawnParticle(Particle.BLOCK,current.clone().add(0,1.5,0),40,1.2,.5,1.6,0,Material.SPRUCE_PLANKS.createBlockData());}}
+    public void applyDamage(double ratio){int s=model.stageFor(ratio);if(s==damageStage)return;boolean worse=s>damageStage;damageStage=s;model.apply(displays,s,travelled);if(worse&&current!=null){int n=raid.spill(current);if(n>0)Bukkit.broadcastMessage("§c♥ [하트 운송전] §e열차가 부서지며 보물 "+n+"개가 쏟아졌습니다!");com.deruy.plugin.timeline.Timeline.log(plugin,"TRANSPORT_DAMAGE",runningRoute,"손상 단계 "+(int)Math.round(model.stages().get(s).below()*100)+"% / 쏟은 보물 "+n+"개",current);current.getWorld().playSound(current,Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR,1f,.8f);current.getWorld().spawnParticle(Particle.BLOCK,current.clone().add(0,1.5,0),40,1.2,.5,1.6,0,Material.SPRUCE_PLANKS.createBlockData());}}
     private void cleanup(Chunk c){for(Entity e:c.getEntities())if(e.getScoreboardTags().contains(WagonModel.TAG)&&!raid.owns(e.getUniqueId())&&displays.stream().noneMatch(d->d.getUniqueId().equals(e.getUniqueId())))e.remove();}
     @EventHandler public void onChunkLoad(ChunkLoadEvent event){cleanup(event.getChunk());}
 }

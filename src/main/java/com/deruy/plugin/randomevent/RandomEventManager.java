@@ -23,18 +23,36 @@ public final class RandomEventManager implements Listener {
     private final Set<String> placedBlocks = java.util.Collections.newSetFromMap(new LinkedHashMap<String,Boolean>(){protected boolean removeEldestEntry(Map.Entry<String,Boolean> e){return size()>200_000;}});
     private Type active,last; private BukkitTask endTask,nextTask,shieldTask;private EventRoulette roulette; private boolean scheduler;
     public RandomEventManager(DeruyPlugin plugin){this.plugin=plugin;}
+    // ── 보스바: 추첨 중 / 진행 중 이벤트 이름 + 남은 시간 ──
+    private org.bukkit.boss.BossBar bar;private BukkitTask barTask;private long endsAt,totalMillis;
+    private boolean barEnabled(){return plugin.getConfig().getBoolean("random-events.bossbar",true);}
+    private void showBar(String title,org.bukkit.boss.BarColor color,double progress){
+        if(!barEnabled())return;
+        if(bar==null){bar=Bukkit.createBossBar(title,color,org.bukkit.boss.BarStyle.SOLID);Bukkit.getOnlinePlayers().forEach(bar::addPlayer);}
+        bar.setTitle(title);bar.setColor(color);bar.setProgress(Math.clamp(progress,0,1));bar.setVisible(true);
+    }
+    private void hideBar(){if(barTask!=null){barTask.cancel();barTask=null;}if(bar!=null){bar.removeAll();bar=null;}}
+    private void updateBar(){
+        if(active==null){hideBar();return;}
+        long left=Math.max(0,endsAt-System.currentTimeMillis());
+        showBar("§c§l랜덤 이벤트 §f"+ChatColor.translateAlternateColorCodes('&',display(active))+" §7("+formatRemaining((left+999)/1000)+")",org.bukkit.boss.BarColor.RED,totalMillis<=0?0:(double)left/totalMillis);
+    }
+    /** 남은 초 → "m:ss" */
+    static String formatRemaining(long seconds){seconds=Math.max(0,seconds);return seconds/60+":"+String.format(Locale.ROOT,"%02d",seconds%60);}
+    public boolean barVisible(){return bar!=null;}
+    org.bukkit.boss.BossBar bossBar(){return bar;}
     public Type getActive(){return active;} public boolean isSchedulerEnabled(){return scheduler;}
     public boolean isDrawing(){return roulette!=null;}
     public void startScheduler(){scheduler=true;if(active==null&&!isDrawing())scheduleNext();}
     public void stopScheduler(){scheduler=false;stopActive();if(nextTask!=null)nextTask.cancel();}
     private void scheduleNext(){if(nextTask!=null){nextTask.cancel();nextTask=null;}if(!scheduler)return;long min=Math.max(1,plugin.getConfig().getLong("random-events.interval-seconds.min",900));long max=Math.max(min,plugin.getConfig().getLong("random-events.interval-seconds.max",1800));nextTask=Bukkit.getScheduler().runTaskLater(plugin,this::startRandom,ThreadLocalRandom.current().nextLong(min,max+1)*20L);}
     public List<Type> enabledTypes(){List<Type> out=new ArrayList<>();for(String name:plugin.getConfig().getStringList("random-events.enabled-events"))try{Type t=Type.valueOf(name.toUpperCase(Locale.ROOT));if(!out.contains(t))out.add(t);}catch(IllegalArgumentException ignored){}return out;}
-    public boolean startRandom(){List<Type> enabled=enabledTypes();if(enabled.isEmpty())return false;stopActive();if(nextTask!=null){nextTask.cancel();nextTask=null;}roulette=new EventRoulette(plugin,enabled,pickWinner(enabled),t->{roulette=null;start(t);});roulette.start();return true;}
+    public boolean startRandom(){List<Type> enabled=enabledTypes();if(enabled.isEmpty())return false;stopActive();if(nextTask!=null){nextTask.cancel();nextTask=null;}roulette=new EventRoulette(plugin,enabled,pickWinner(enabled),t->{roulette=null;start(t);});roulette.start();showBar("§6§l랜덤 이벤트 추첨 중...",org.bukkit.boss.BarColor.YELLOW,1);return true;}
     /** 가중치(random-events.weights.<이벤트>, 기본 1) 추첨. avoid-repeat면 직전 이벤트 제외(후보가 2개 이상일 때). */
     Type pickWinner(List<Type> enabled){List<Type> candidates=new ArrayList<>(enabled);if(plugin.getConfig().getBoolean("random-events.avoid-repeat",true)&&last!=null&&candidates.size()>1)candidates.remove(last);return RouletteMath.weightedPick(candidates,t->plugin.getConfig().getDouble("random-events.weights."+t.name(),1.0),ThreadLocalRandom.current().nextDouble());}
     void setLast(Type t){last=t;}
-    public boolean start(Type type){stopActive();if(nextTask!=null){nextTask.cancel();nextTask=null;}active=type;last=type;long sec=Math.max(1,plugin.getConfig().getLong("random-events.duration-seconds",300));Bukkit.broadcastMessage("§c§l[랜덤 이벤트] §f"+display(type)+" §7("+sec+"초)");if(type==Type.POTION_BAN)Bukkit.getOnlinePlayers().forEach(p->p.getActivePotionEffects().forEach(e->p.removePotionEffect(e.getType())));applyPersistent();if(type==Type.SHIELD_BAN){enforceShields();shieldTask=Bukkit.getScheduler().runTaskTimer(plugin,this::enforceShields,1,2);}endTask=Bukkit.getScheduler().runTaskLater(plugin,()->{stopActive();scheduleNext();},sec*20L);return true;}
-    public void stopActive(){if(roulette!=null){roulette.cancel();roulette=null;}if(shieldTask!=null){shieldTask.cancel();shieldTask=null;}if(active==Type.SHIELD_BAN)for(Player p:Bukkit.getOnlinePlayers())if(p.getCooldown(Material.SHIELD)<=4)p.setCooldown(Material.SHIELD,0);if(endTask!=null){endTask.cancel();endTask=null;}if(active!=null)Bukkit.broadcastMessage("§c[랜덤 이벤트] §7이벤트가 종료되었습니다.");if(active==Type.STRENGTH_III)Bukkit.getOnlinePlayers().forEach(this::removeEventStrength);active=null;}
+    public boolean start(Type type){stopActive();if(nextTask!=null){nextTask.cancel();nextTask=null;}active=type;last=type;long sec=Math.max(1,plugin.getConfig().getLong("random-events.duration-seconds",300));Bukkit.broadcastMessage("§c§l[랜덤 이벤트] §f"+display(type)+" §7("+sec+"초)");com.deruy.plugin.timeline.Timeline.log(plugin,"RANDOM_EVENT_START",type.name(),display(type)+" ("+sec+"초)",null);totalMillis=sec*1000L;endsAt=System.currentTimeMillis()+totalMillis;updateBar();if(bar!=null)barTask=Bukkit.getScheduler().runTaskTimer(plugin,this::updateBar,20,20);if(type==Type.POTION_BAN)Bukkit.getOnlinePlayers().forEach(p->p.getActivePotionEffects().forEach(e->p.removePotionEffect(e.getType())));applyPersistent();if(type==Type.SHIELD_BAN){enforceShields();shieldTask=Bukkit.getScheduler().runTaskTimer(plugin,this::enforceShields,1,2);}endTask=Bukkit.getScheduler().runTaskLater(plugin,()->{stopActive();scheduleNext();},sec*20L);return true;}
+    public void stopActive(){hideBar();if(roulette!=null){roulette.cancel();roulette=null;}if(shieldTask!=null){shieldTask.cancel();shieldTask=null;}if(active==Type.SHIELD_BAN)for(Player p:Bukkit.getOnlinePlayers())if(p.getCooldown(Material.SHIELD)<=4)p.setCooldown(Material.SHIELD,0);if(endTask!=null){endTask.cancel();endTask=null;}if(active!=null){Bukkit.broadcastMessage("§c[랜덤 이벤트] §7이벤트가 종료되었습니다.");com.deruy.plugin.timeline.Timeline.log(plugin,"RANDOM_EVENT_END",active.name(),display(active),null);}if(active==Type.STRENGTH_III)Bukkit.getOnlinePlayers().forEach(this::removeEventStrength);active=null;}
     /** 이벤트가 준 무한 힘 III만 지운다(직접 마신 힘 포션은 유지). */
     private void removeEventStrength(Player p){PotionEffect e=p.getPotionEffect(PotionEffectType.STRENGTH);if(e!=null&&e.getAmplifier()==2&&(e.isInfinite()||e.getDuration()>1_000_000_000))p.removePotionEffect(PotionEffectType.STRENGTH);}
     private String display(Type t){return plugin.getConfig().getString("random-events.names."+t.name(),t.name());}
@@ -49,7 +67,7 @@ public final class RandomEventManager implements Listener {
 
     @EventHandler public void rouletteClick(org.bukkit.event.inventory.InventoryClickEvent e){if(e.getView().getTopInventory().getHolder() instanceof EventRoulette.Gui)e.setCancelled(true);}
     @EventHandler public void rouletteDrag(org.bukkit.event.inventory.InventoryDragEvent e){if(e.getView().getTopInventory().getHolder() instanceof EventRoulette.Gui)e.setCancelled(true);}
-    @EventHandler public void join(PlayerJoinEvent e){applyPersistent();}
+    @EventHandler public void join(PlayerJoinEvent e){applyPersistent();if(bar!=null)bar.addPlayer(e.getPlayer());}
     @EventHandler(ignoreCancelled=true) public void place(BlockPlaceEvent e){placedBlocks.add(key(e.getBlockPlaced()));if(on(Type.COBWEB_BAN)&&e.getBlockPlaced().getType()==Material.COBWEB)deny(e,e.getPlayer(),"거미줄을 사용할 수 없습니다.");}
     @EventHandler(ignoreCancelled=true) public void consume(PlayerItemConsumeEvent e){if(on(Type.POTION_BAN)&&(e.getItem().getType()==Material.POTION||e.getItem().getType()==Material.SPLASH_POTION||e.getItem().getType()==Material.LINGERING_POTION))deny(e,e.getPlayer(),"포션을 사용할 수 없습니다.");}
     @EventHandler(ignoreCancelled=true) public void resurrect(EntityResurrectEvent e){if(on(Type.TOTEM_BAN)&&e.getEntity() instanceof Player p)deny(e,p,"토템을 사용할 수 없습니다.");}

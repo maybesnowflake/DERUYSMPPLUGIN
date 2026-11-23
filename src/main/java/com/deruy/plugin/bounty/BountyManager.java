@@ -86,6 +86,8 @@ public class BountyManager implements GameEvent {
         plugin.getDataStore().removeBountyPair(a.getUniqueId());
     }
 
+    public int pairCount() { return bounties.size() / 2; }
+
     public UUID getTarget(Player player) {
         return bounties.get(player.getUniqueId());
     }
@@ -142,7 +144,7 @@ public class BountyManager implements GameEvent {
         boolean rewarded = false;
         if (matches(killer, designatedPursuer) && matches(victim, designatedTarget)) {
             Bukkit.broadcastMessage("§4§l[바운티] §a"+killer.getName()+"님이 지정 대상 "+victim.getName()+"님을 처치했습니다!");
-            giveReward(killer); plugin.spawnRainbowFirework(victim.getLocation()); rewarded=true;
+            giveReward(killer); plugin.spawnRainbowFirework(victim.getLocation()); rewarded=true; com.deruy.plugin.timeline.Timeline.log(plugin, "BOUNTY_KILL", killer.getName() + " → " + victim.getName(), "지정 대상", victim.getLocation());
             if (plugin.getConfig().getBoolean("bounty.clear-designated-on-kill", true)) clearDesignatedSides();
         }
 
@@ -155,6 +157,7 @@ public class BountyManager implements GameEvent {
             Bukkit.broadcastMessage(deathMessage);
 
             giveReward(killer);
+            com.deruy.plugin.timeline.Timeline.log(plugin, "BOUNTY_KILL", killer.getName() + " → " + victim.getName(), "서버 전체 타겟", victim.getLocation());
             clearGlobalTarget();
             plugin.spawnRainbowFirework(victim.getLocation());
             rewarded = true;
@@ -170,6 +173,7 @@ public class BountyManager implements GameEvent {
             Bukkit.broadcastMessage(deathMessage);
 
             giveReward(killer);
+            com.deruy.plugin.timeline.Timeline.log(plugin, "BOUNTY_KILL", killer.getName() + " → " + victim.getName(), "1:1 페어", victim.getLocation());
             bounties.remove(killer.getUniqueId());
             bounties.remove(victim.getUniqueId());
             plugin.getDataStore().removeBountyPair(killer.getUniqueId());

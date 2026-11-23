@@ -24,6 +24,8 @@ public final class HeartAuditLog implements AutoCloseable {
         record(p.getUniqueId(), p.getName(), before, after, reason);
     }
     public void record(UUID id, String name, double before, double after, String reason) {
+        var online = org.bukkit.Bukkit.getPlayer(id);
+        com.deruy.plugin.timeline.Timeline.log(plugin, "HEART", name, before + " → " + after + " (" + reason + ")", online == null ? null : online.getLocation());
         if (!plugin.getConfig().getBoolean("heart.audit-enabled", true)) return;
         String now = Instant.now().toString();
         String line = now + "\t" + id + "\t" + clean(name) + "\t" + before + "\t" + after + "\t" + clean(reason) + "\n";
