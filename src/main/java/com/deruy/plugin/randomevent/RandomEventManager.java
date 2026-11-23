@@ -19,7 +19,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class RandomEventManager implements Listener {
     public enum Type { SHIELD_BAN,TOTEM_BAN,POTION_BAN,POISON_HIT,DOUBLE_DROPS,MACE_BAN,STRENGTH_III,KILL_DROP,CROP_REWARD,SWORD_SHIELD_BREAK,AXE_CRIT_SLOW,TNT_DOUBLE_DAMAGE,PROJECTILE_BAN,KILL_INVISIBILITY,KILL_VOUCHER,MACE_DOUBLE_DAMAGE,PROJECTILE_WITHER,COBWEB_BAN,LIFESTEAL,COUNTERATTACK,POST_KILL_SPEED,FISHING_FRENZY,MACE_SHOCKWAVE }
     private final DeruyPlugin plugin;
-    private final Set<String> placedBlocks = new HashSet<>();
+    /** 플레이어가 놓은 블록(드롭 2배 악용 방지). 서버가 오래 켜져 있어도 메모리가 끝없이 늘지 않게 최근 20만 개만 기억. */
+    private final Set<String> placedBlocks = java.util.Collections.newSetFromMap(new LinkedHashMap<String,Boolean>(){protected boolean removeEldestEntry(Map.Entry<String,Boolean> e){return size()>200_000;}});
     private Type active,last; private BukkitTask endTask,nextTask,shieldTask;private EventRoulette roulette; private boolean scheduler;
     public RandomEventManager(DeruyPlugin plugin){this.plugin=plugin;}
     public Type getActive(){return active;} public boolean isSchedulerEnabled(){return scheduler;}
@@ -61,7 +62,7 @@ public final class RandomEventManager implements Listener {
         if(p==null)return;
         if(on(Type.MACE_BAN)&&weapon(p,Material.MACE)){deny(e,p,"철퇴를 사용할 수 없습니다.");return;}
         if(on(Type.MACE_DOUBLE_DAMAGE)&&e.getDamager() instanceof Player&&weapon(p,Material.MACE))multiplyFinalDamage(e,2);
-        if(on(Type.COUNTERATTACK)&&p.getHealth()<=18)e.setDamage(e.getDamage()*1.5);
+        if(on(Type.COUNTERATTACK)&&p.getHealth()<=18)multiplyFinalDamage(e,1.5);
         if(on(Type.LIFESTEAL)){double heal=Math.min(p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue(),p.getHealth()+e.getFinalDamage()*0.2);p.setHealth(heal);}
         if(on(Type.POISON_HIT)&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.POISON,100,1));
         if(on(Type.PROJECTILE_WITHER)&&e.getDamager() instanceof Projectile&&e.getEntity() instanceof LivingEntity l)l.addPotionEffect(new PotionEffect(PotionEffectType.WITHER,100,1));

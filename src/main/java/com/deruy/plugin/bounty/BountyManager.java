@@ -55,6 +55,7 @@ public class BountyManager implements GameEvent {
         if (!running) return;
         running = false;
         bounties.clear();
+        plugin.getDataStore().clearBountyPairs(); // 재시작 후 끝난 페어가 되살아나지 않게
         clearDesignatedSides();
         Bukkit.broadcastMessage("§4§l바운티 §e이벤트가 종료되었습니다.");
     }
@@ -67,6 +68,9 @@ public class BountyManager implements GameEvent {
     // ---------------- 1:1 페어 ----------------
 
     public void pair(Player a, Player b) {
+        // 이미 다른 사람과 짝이었다면 그 짝을 먼저 끊는다 (상대 쪽에 옛 타겟이 남는 문제)
+        unpair(a);
+        unpair(b);
         bounties.put(a.getUniqueId(), b.getUniqueId());
         bounties.put(b.getUniqueId(), a.getUniqueId());
         plugin.getDataStore().saveBountyPair(a.getUniqueId(), b.getUniqueId());

@@ -167,6 +167,7 @@ public class DeruyPlugin extends JavaPlugin {
         pm.registerEvents(new HeartDyeRestrictionListener(this), this); // 하트를 염료로 악용 방지
         pm.registerEvents(new DragonListener(this), this);             // 드래곤 체력/알
         pm.registerEvents(new MiscRuleListener(this), this);           // 토템/사망이펙트/화살
+        pm.registerEvents(new com.deruy.plugin.misc.CelebrationFireworkListener(), this); // 축하 폭죽 피해 차단
         pm.registerEvents(new BingoListener(this), this);
         pm.registerEvents(new BingoBoardGuiListener(), this);
         pm.registerEvents(new com.deruy.plugin.supplydrop.SupplyChestProtectionListener(this), this);
@@ -539,6 +540,10 @@ public class DeruyPlugin extends JavaPlugin {
         meta.addEffect(effect);
         meta.setPower(1);
         firework.setFireworkMeta(meta);
+        // 축하용 폭죽은 터질 때 근처 플레이어에게 피해를 주면 안 된다 (CelebrationFireworkListener 가 막음)
+        firework.getPersistentDataContainer().set(CELEBRATION_KEY, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
         firework.detonate();
     }
+
+    public static final org.bukkit.NamespacedKey CELEBRATION_KEY = new org.bukkit.NamespacedKey("deruy", "celebration_firework");
 }

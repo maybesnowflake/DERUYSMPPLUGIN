@@ -4,6 +4,8 @@
 
 lifesteal:
   enabled: true
+  # 전투 태그(컴벳) 중에는 /withdraw 로 하트를 뺄 수 없음
+  block-withdraw-in-combat: true
   zero-heart-ban-message: §c하트를 모두 잃어 서버에서 추방되었습니다.
 
   # pending #4: 트라이던트 리피터틴을 "컴벳태그 중일 때만" 금지

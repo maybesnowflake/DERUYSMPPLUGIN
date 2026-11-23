@@ -161,6 +161,11 @@ public class DataStore {
         save();
     }
 
+    public void clearBountyPairs() {
+        data.set("bounty.pairs", null);
+        save();
+    }
+
     public Map<UUID, UUID> loadBountyPairs() {
         Map<UUID, UUID> result = new HashMap<>();
         ConfigurationSection section = data.getConfigurationSection("bounty.pairs");

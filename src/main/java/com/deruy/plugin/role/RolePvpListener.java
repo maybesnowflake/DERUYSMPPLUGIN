@@ -13,6 +13,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 public class RolePvpListener implements Listener {
 
     private final DeruyPlugin plugin;
+    private final java.util.Map<java.util.UUID, Long> lastNotice = new java.util.HashMap<>();
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) { lastNotice.remove(event.getPlayer().getUniqueId()); }
 
     public RolePvpListener(DeruyPlugin plugin) {
         this.plugin = plugin;
@@ -23,12 +27,18 @@ public class RolePvpListener implements Listener {
         if (!(event.getEntity() instanceof Player victim)) return;
 
         Player attacker = resolveAttacker(event);
-        if (attacker == null) return;
+        if (attacker == null || attacker.equals(victim)) return;
 
         RoleManager roleManager = plugin.getRoleManager();
         if (!roleManager.isPvpAllowed(attacker) || !roleManager.isPvpAllowed(victim)) {
             event.setCancelled(true);
-            attacker.sendMessage(plugin.getMessage("pvp-blocked", "&c지금은 PVP가 금지되어 있습니다."));
+            // 휩쓸기·연사로 메시지가 도배되지 않게 2초에 한 번만
+            long now = System.currentTimeMillis();
+            Long last = lastNotice.get(attacker.getUniqueId());
+            if (last == null || now - last > 2000) {
+                lastNotice.put(attacker.getUniqueId(), now);
+                attacker.sendMessage(plugin.getMessage("pvp-blocked", "&c지금은 PVP가 금지되어 있습니다."));
+            }
         }
     }
 
