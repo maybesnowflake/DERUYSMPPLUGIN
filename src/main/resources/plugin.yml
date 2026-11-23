@@ -1,5 +1,5 @@
 name: DeruyPlugin
-version: 1.4.0
+version: 1.5.0
 main: com.deruy.plugin.DeruyPlugin
 api-version: '1.21'
 author: Fsixel

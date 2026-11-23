@@ -67,6 +67,12 @@ public class BountyManager implements GameEvent {
 
     // ---------------- 1:1 페어 ----------------
 
+    /** 서버 종료용: 저장된 페어·지정 대상은 그대로 두고 메모리만 정리 (재시작 후 이어서) */
+    public void shutdown() {
+        running = false;
+        bounties.clear();
+    }
+
     public void pair(Player a, Player b) {
         // 이미 다른 사람과 짝이었다면 그 짝을 먼저 끊는다 (상대 쪽에 옛 타겟이 남는 문제)
         unpair(a);

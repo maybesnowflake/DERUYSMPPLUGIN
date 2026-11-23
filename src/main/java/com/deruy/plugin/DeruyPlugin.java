@@ -340,11 +340,11 @@ public class DeruyPlugin extends JavaPlugin {
         if (superKothManager != null && superKothManager.isRunning()) superKothManager.stop();
         if (kothManager != null) kothManager.stopScheduler();
         if (superKothManager != null) superKothManager.stopScheduler();
-        if (locatorBarManager != null && locatorBarManager.isRunning()) locatorBarManager.stop();
+        if (locatorBarManager != null && locatorBarManager.isRunning()) locatorBarManager.shutdown(); // 켜 둔 설정 유지
         if (bingoManager != null && bingoManager.isRunning()) bingoManager.stop();
         if (supplyDropManager != null) supplyDropManager.stop();
         if (superSupplyDropManager != null) superSupplyDropManager.stop();
-        if (bountyManager != null && bountyManager.isRunning()) bountyManager.stop();
+        if (bountyManager != null && bountyManager.isRunning()) bountyManager.shutdown(); // 페어 저장 유지
         if (roleEffectScheduler != null) roleEffectScheduler.stop();
         if (combatZoneVisualizer != null) combatZoneVisualizer.stop();
         if (combatBossBarManager != null) combatBossBarManager.stop();

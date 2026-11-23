@@ -18,7 +18,7 @@ public final class QuestionTimeManager implements Listener {
     private BukkitTask nextTask, timeoutTask;
     private boolean enabled;
     private Set<String> answers = Set.of();
-    private boolean accepting;
+    private volatile boolean accepting; // 채팅 스레드에서도 읽음
 
     public QuestionTimeManager(DeruyPlugin plugin) { this.plugin = plugin; }
 
@@ -71,6 +71,7 @@ public final class QuestionTimeManager implements Listener {
         answers = valid.stream().map(this::normalize).filter(s -> !s.isEmpty()).collect(java.util.stream.Collectors.toUnmodifiableSet());
         if (question.isEmpty() || answers.isEmpty()) { scheduleNext(); return; }
         accepting = true;
+        questionId++;
         Bukkit.broadcastMessage("§6§l[질문타임] §f" + question);
         Bukkit.broadcastMessage("§7제한 시간 안에 정답을 채팅으로 입력하세요!");
         long seconds = Math.max(1, plugin.getConfig().getLong("question-time.answer-time-seconds", 30));
@@ -80,18 +81,32 @@ public final class QuestionTimeManager implements Listener {
         }, seconds * 20L);
     }
 
+    /** 문제마다 번호. 채팅 스레드에서 본 문제가 메인 스레드에서도 같은 문제인지 확인 */
+    private volatile long questionId;
+
     @EventHandler(ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
-        if (!accepting || !answers.contains(normalize(event.getMessage()))) return;
+        // 채팅 스레드는 여러 개라 여기서 바로 확정하면 동시 정답자 둘 다 보상받을 수 있음 → 메인 스레드에서 판정 (Codex 리뷰)
+        if (!accepting) return;
+        String answer = normalize(event.getMessage());
+        long seen = questionId;
+        Player player = event.getPlayer();
+        Bukkit.getScheduler().runTask(plugin, () -> judge(player, answer, seen));
+    }
+
+    /** 메인 스레드: 아직 받는 중이고 같은 문제이고 정답이면 첫 사람만 보상 */
+    boolean judge(Player winner, String answer, long seen) {
+        if (!accepting || seen != questionId || !answers.contains(answer)) return false;
         accepting = false; cancel(timeoutTask);
-        Player winner = event.getPlayer();
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        {
             Bukkit.broadcastMessage("§6§l[질문타임] §a" + winner.getName() + "님이 정답을 맞혔습니다!");
             var rewards = plugin.getSupplyChestRegistry().rollRewards(plugin.getConfig().getStringList("question-time.reward-items"), plugin.getLogger());
             rewards.forEach(item -> winner.getInventory().addItem(item).values().forEach(left -> winner.getWorld().dropItemNaturally(winner.getLocation(), left)));
             scheduleNext();
-        });
+        }
+        return true;
     }
+    public long currentQuestionId() { return questionId; }
 
     private String normalize(String s) { return s == null ? "" : s.strip().replaceAll("\\s+", "").toLowerCase(Locale.ROOT); }
 }
