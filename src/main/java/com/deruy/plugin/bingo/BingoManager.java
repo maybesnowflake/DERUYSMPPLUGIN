@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
 
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +43,22 @@ public class BingoManager implements GameEvent {
     private final Map<String, Set<Integer>> announcedMilestones = new HashMap<>();
     // 이벤트를 종료시킨(최종 목표 달성) 팀들
     private final Set<String> finishedTeams = new HashSet<>();
+
+    /** 서바이벌에서 얻을 수 없는 아이템 (설정의 excluded-items 와 별개로 항상 제외) */
+    static final Set<String> UNOBTAINABLE = Set.of(
+            "BEDROCK", "BARRIER", "LIGHT", "STRUCTURE_BLOCK", "STRUCTURE_VOID", "JIGSAW", "COMMAND_BLOCK",
+            "CHAIN_COMMAND_BLOCK", "REPEATING_COMMAND_BLOCK", "COMMAND_BLOCK_MINECART", "DEBUG_STICK", "KNOWLEDGE_BOOK",
+            "SPAWNER", "TRIAL_SPAWNER", "VAULT", "END_PORTAL_FRAME", "REINFORCED_DEEPSLATE", "BUDDING_AMETHYST",
+            "PETRIFIED_OAK_SLAB", "PLAYER_HEAD", "FARMLAND", "DIRT_PATH", "FROGSPAWN", "TEST_BLOCK", "TEST_INSTANCE_BLOCK",
+            "END_GATEWAY", "END_PORTAL", "NETHER_PORTAL", "BUBBLE_COLUMN", "CHORUS_PLANT", "TALL_SEAGRASS", "PISTON_HEAD",
+            "MOVING_PISTON", "FIRE", "SOUL_FIRE", "WATER", "LAVA", "POWDER_SNOW", "BUNDLE_DEBUG");
+    static boolean obtainable(Material m) {
+        String n = m.name();
+        return !UNOBTAINABLE.contains(n) && !n.endsWith("_SPAWN_EGG") && !n.startsWith("INFESTED_") && !n.contains("COMMAND_BLOCK");
+    }
+    /** 갈 수 없는 바이옴 */
+    static final Set<String> UNREACHABLE_BIOMES = Set.of("THE_VOID", "CUSTOM");
+    private org.bukkit.scheduler.BukkitTask scanTask;
 
     public BingoManager(DeruyPlugin plugin) {
         this.plugin = plugin;
@@ -86,13 +103,13 @@ public class BingoManager implements GameEvent {
 
         for (Biome biome : org.bukkit.Registry.BIOME) {
             String name = biome.getKey().getKey().toUpperCase();
-            if (excludedBiomes.stream().noneMatch(n -> n.equalsIgnoreCase(name))) {
+            if (!UNREACHABLE_BIOMES.contains(name) && excludedBiomes.stream().noneMatch(n -> n.equalsIgnoreCase(name))) {
                 pool.add(new BingoCell(BingoCell.Type.BIOME, name));
             }
         }
 
         for (Material material : Material.values()) {
-            if (!material.isItem() || material.isLegacy() || material.isAir()) continue;
+            if (!material.isItem() || material.isLegacy() || material.isAir() || !obtainable(material)) continue;
             String name = material.name();
             if (excludedItems.stream().noneMatch(n -> n.equalsIgnoreCase(name))) {
                 pool.add(new BingoCell(BingoCell.Type.ITEM, name));
@@ -129,6 +146,8 @@ public class BingoManager implements GameEvent {
         }
 
         running = true;
+        startScan();
+        saveState();
         Bukkit.broadcastMessage("§d§l빙고 §e이벤트가 시작되었습니다! (" + size + "x" + size + ", 목표 줄수: "
                 + lineMilestones + ")");
     }
@@ -137,11 +156,22 @@ public class BingoManager implements GameEvent {
     public void stop() {
         if (!running) return;
         running = false;
+        if (scanTask != null) { scanTask.cancel(); scanTask = null; }
         board.clear();
         teamProgress.clear();
         announcedMilestones.clear();
         finishedTeams.clear();
+        plugin.getDataStore().set("bingo.state", null);
+        plugin.getDataStore().save();
         Bukkit.broadcastMessage("§d§l빙고 §e이벤트가 종료되었습니다.");
+    }
+
+    /** 서버 종료·리로드용: 타이머만 멈추고 판·진행은 data.yml 에 남겨 켜질 때 이어서 한다. */
+    public void shutdown() {
+        if (!running) return;
+        if (scanTask != null) { scanTask.cancel(); scanTask = null; }
+        saveState();
+        running = false;
     }
 
     @Override
@@ -179,6 +209,7 @@ public class BingoManager implements GameEvent {
             if (progress.add(i)) {
                 Bukkit.broadcastMessage("§d[빙고] §e팀 '" + team + "'§7(" + player.getName() + ")§e가 칸을 완료했습니다: " + cell.display());
                 checkLines(team, player);
+                if (running) saveState();
             }
         }
     }
@@ -267,5 +298,88 @@ public class BingoManager implements GameEvent {
 
     public Set<Integer> getProgress(String team) {
         return teamProgress.getOrDefault(team, Set.of());
+    }
+
+    /** 줍기만 세던 것을 보완: 제작·화로·거래·상자에서 꺼낸 아이템도 2초마다 인벤토리를 훑어 인정 */
+    private void startScan() {
+        if (scanTask != null) scanTask.cancel();
+        scanTask = Bukkit.getScheduler().runTaskTimer(plugin, this::scanInventories, 40L, 40L);
+    }
+
+    void scanInventories() {
+        if (!running) return;
+        Set<Material> wanted = new HashSet<>();
+        for (BingoCell c : board) if (c.getType() == BingoCell.Type.ITEM) {
+            Material m = Material.matchMaterial(c.getValue());
+            if (m != null) wanted.add(m);
+        }
+        if (wanted.isEmpty()) return;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (getTeam(p) == null) continue;
+            Set<Material> seen = new HashSet<>();
+            for (var item : p.getInventory().getContents())
+                if (item != null && wanted.contains(item.getType()) && seen.add(item.getType())) checkItem(p, item.getType());
+            if (!running) return; // 최종 목표 달성으로 끝났으면 중단
+        }
+    }
+
+    /** 재시작해도 이어서 하도록 판·진행 상황을 data.yml 에 저장 */
+    private void saveState() {
+        var ds = plugin.getDataStore();
+        ds.set("bingo.state", null);
+        ds.set("bingo.state.size", size);
+        List<String> cells = new ArrayList<>();
+        for (BingoCell c : board) cells.add(c.getType() + ":" + c.getValue());
+        ds.set("bingo.state.board", cells);
+        ds.set("bingo.state.milestones", lineMilestones);
+        // 팀 이름에 '.' 이 들어가도 경로가 갈라지지 않게 이름을 값으로 저장한다.
+        Set<String> teams = new java.util.LinkedHashSet<>(teamProgress.keySet());
+        teams.addAll(announcedMilestones.keySet());
+        List<Map<String, Object>> records = new ArrayList<>();
+        for (String t : teams) {
+            Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("name", t);
+            r.put("progress", new ArrayList<>(teamProgress.getOrDefault(t, Set.of())));
+            r.put("announced", new ArrayList<>(announcedMilestones.getOrDefault(t, Set.of())));
+            records.add(r);
+        }
+        ds.set("bingo.state.teams", records);
+        ds.set("bingo.state.finished", new ArrayList<>(finishedTeams));
+        ds.save();
+    }
+
+    private static Set<Integer> ints(Object raw) {
+        Set<Integer> out = new HashSet<>();
+        if (raw instanceof List<?> list) for (Object o : list) if (o instanceof Number n) out.add(n.intValue());
+        return out;
+    }
+
+    /** onEnable 에서 호출: 저장된 진행 중 빙고가 있으면 이어서 */
+    public boolean restoreState() {
+        var st = plugin.getDataStore().section("bingo.state");
+        if (st == null || running) return false;
+        List<BingoCell> cells = new ArrayList<>();
+        for (String raw : st.getStringList("board")) {
+            int i = raw.indexOf(':');
+            if (i < 0) return false;
+            cells.add(new BingoCell(BingoCell.Type.valueOf(raw.substring(0, i)), raw.substring(i + 1)));
+        }
+        int n = st.getInt("size", 5);
+        if (cells.size() != n * n) return false;
+        size = n; board = cells;
+        lineMilestones = new ArrayList<>(st.getIntegerList("milestones"));
+        if (lineMilestones.isEmpty()) reloadMilestones();
+        teamProgress.clear(); announcedMilestones.clear(); finishedTeams.clear();
+        for (Map<?, ?> r : st.getMapList("teams")) {
+            if (!(r.get("name") instanceof String t)) continue;
+            teamProgress.put(t, ints(r.get("progress")));
+            Set<Integer> announced = ints(r.get("announced"));
+            if (!announced.isEmpty()) announcedMilestones.put(t, announced);
+        }
+        finishedTeams.addAll(st.getStringList("finished"));
+        running = true;
+        startScan();
+        plugin.getLogger().info("진행 중이던 빙고를 이어서 시작합니다 (" + size + "x" + size + ")");
+        return true;
     }
 }

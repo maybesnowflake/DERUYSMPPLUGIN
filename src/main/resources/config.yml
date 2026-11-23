@@ -19,6 +19,14 @@ lifesteal:
     ender-pearl-tp-blocked: true
     ender-eyes-blocked: true
 
+  # pending #9: 주민 거래 무제한 (잠기지 않고 값도 오르지 않음). 끄면 바로 원래대로
+  unlimited-villager-trades: false
+
+  # pending #6·#11: 바닐라 레시피 제거 (위 recipes 의 커스텀 철퇴·황금 사과로 대체). 다시 켜려면 false 후 서버 재시작
+  remove-vanilla-recipes:
+    mace: true
+    golden-apple: true
+
   # pending #13: 네더라이트 "장비 제작(스미싱 업그레이드)"만 차단. 기존 장비는 사용 가능.
   recipe-block:
     netherite-upgrade-smithing: false
@@ -348,7 +356,7 @@ death:
   # 사망시 드롭되는 아이템들이 흩뿌려지는 반경(블록). 0이면 원래처럼 한 곳에 모아 떨어짐.
   drop-scatter-radius: 3.0
 
-# 사망/밴 시점에 재생되는 사운드. sound-name은 Bukkit Sound enum 이름 아무거나 가능
+# 사망/밴 시점에 재생되는 사운드. sound-name 은 "entity.wither.spawn" 같은 소리 키(권장, 리소스팩 소리·염소 뿔 "item.goat_horn.sound.5" 도 가능) 또는 옛 형식 ENTITY_WITHER_SPAWN
 # (마인크래프트에 내장된 소리들, 예: ENTITY_WITHER_SPAWN, ENTITY_ENDER_DRAGON_DEATH 등).
 # range: "0"=재생안함(무음), "00"=서버 전체(거리무관 전원에게), 그 외 숫자=그 블록반경 안의 플레이어에게만 들림.
 sounds:

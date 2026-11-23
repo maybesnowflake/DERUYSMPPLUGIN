@@ -37,8 +37,10 @@ public class RoleEffectScheduler {
     private final DeruyPlugin plugin;
     private BukkitTask task;
 
-    private final Set<Integer> triggeredToday = new HashSet<>();
+    private final Set<String> triggeredToday = new HashSet<>();
     private int lastResetDay = -1;
+    /** 직전 확인 시각. 서버가 렉으로 1분 넘게 멈춰도 그 사이 지난 시각을 놓치지 않게 한다. */
+    private LocalTime lastChecked;
 
     public RoleEffectScheduler(DeruyPlugin plugin) {
         this.plugin = plugin;
@@ -65,18 +67,22 @@ public class RoleEffectScheduler {
         int dayValue = java.time.LocalDate.now().getDayOfYear();
         if (dayValue != lastResetDay) {
             triggeredToday.clear();
+            if (lastResetDay != -1) lastChecked = LocalTime.MIDNIGHT; // 날이 바뀌면 00:00부터 다시 본다
             lastResetDay = dayValue;
         }
+        LocalTime now = LocalTime.now();
+        LocalTime previous = lastChecked;
+        lastChecked = now;
 
         List<?> rawList = plugin.getConfig().getList("role-effects.schedule");
         if (rawList == null) return;
 
-        LocalTime now = LocalTime.now();
-
         for (int i = 0; i < rawList.size(); i++) {
-            if (triggeredToday.contains(i)) continue;
             Object raw = rawList.get(i);
             if (!(raw instanceof Map)) continue;
+            // 리로드로 순서가 바뀌어도 같은 항목을 두 번 주지 않도록 내용으로 구분한다.
+            String key = raw.toString();
+            if (triggeredToday.contains(key)) continue;
 
             @SuppressWarnings("unchecked")
             Map<String, Object> entry = (Map<String, Object>) raw;
@@ -89,14 +95,26 @@ public class RoleEffectScheduler {
 
             try {
                 LocalTime target = LocalTime.parse(timeStr);
-                if (now.getHour() == target.getHour() && now.getMinute() == target.getMinute()) {
+                if (due(target, previous, now)) {
                     applyEffect(role, effectName, amplifier, durationSeconds);
-                    triggeredToday.add(i);
+                    triggeredToday.add(key);
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning("role-effects.schedule 항목 형식이 잘못되었습니다: " + entry);
             }
         }
+    }
+
+    /**
+     * 처음 확인할 때(서버 시작 직후)는 그 분이 맞을 때만, 이후에는 직전 확인과 지금 사이에
+     * 목표 시각이 지났으면 실행한다. 재시작으로 이미 지난 시각을 한꺼번에 몰아 주지는 않는다.
+     */
+    static boolean due(LocalTime target, LocalTime previous, LocalTime now) {
+        LocalTime minute = target.withSecond(0).withNano(0);
+        if (previous == null || previous.isAfter(now))
+            return now.getHour() == minute.getHour() && now.getMinute() == minute.getMinute();
+        return minute.isAfter(previous) && !minute.isAfter(now)
+                || now.getHour() == minute.getHour() && now.getMinute() == minute.getMinute();
     }
 
     private void applyEffect(String role, String effectName, int amplifier, int durationSeconds) {

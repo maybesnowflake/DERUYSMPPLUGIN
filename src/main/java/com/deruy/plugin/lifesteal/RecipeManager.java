@@ -40,8 +40,9 @@ public class RecipeManager {
             var existing = iterator.next();
             if (existing instanceof org.bukkit.Keyed keyed && keyed.getKey().getNamespace().equalsIgnoreCase(plugin.getName())) iterator.remove();
         }
-        Bukkit.removeRecipe(NamespacedKey.minecraft("mace"));
-        Bukkit.removeRecipe(NamespacedKey.minecraft("golden_apple"));
+        // pending #6·#11: 바닐라 철퇴·황금 사과 레시피 제거 (설정으로 끌 수 있음, 끄면 다시 등록은 서버 재시작 후)
+        if (plugin.getConfig().getBoolean("lifesteal.remove-vanilla-recipes.mace", true)) Bukkit.removeRecipe(NamespacedKey.minecraft("mace"));
+        if (plugin.getConfig().getBoolean("lifesteal.remove-vanilla-recipes.golden-apple", true)) Bukkit.removeRecipe(NamespacedKey.minecraft("golden_apple"));
 
         ConfigurationSection recipesSection = plugin.getConfig().getConfigurationSection("lifesteal.recipes");
         if (recipesSection == null) {
@@ -54,6 +55,7 @@ public class RecipeManager {
             if (section == null) continue;
             registerFromConfig(recipeName, section);
         }
+        Bukkit.updateRecipes(); // 리로드해도 접속 중인 사람 레시피 북에 바로 반영
     }
 
     private void registerFromConfig(String recipeName, ConfigurationSection section) {

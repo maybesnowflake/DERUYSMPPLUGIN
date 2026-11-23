@@ -46,6 +46,8 @@ public class CombatZoneListener implements Listener {
                 .anyMatch(r -> isProtectedRegionName(r.getId()));
 
         if (!toInProtected) return false;
+        // 다른 월드에서 넘어오면(포탈·명령어 텔레포트) 무조건 진입
+        if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return true;
 
         // from이 이미 같은 보호구역 안이었다면(구역 내 이동) 막지 않음 - 진입 순간만 차단
         var fromSet = query.getApplicableRegions(BukkitAdapter.adapt(from));
@@ -58,8 +60,7 @@ public class CombatZoneListener implements Listener {
     private void handleBlock(Player player, Location from, Location to, org.bukkit.event.Cancellable event) {
         if (!plugin.getConfig().getBoolean("combat-zone.enabled", true)) return;
         if (!plugin.getLifeStealManager().isCombatTagged(player.getUniqueId())) return;
-        if (from.getWorld() == null || to.getWorld() == null) return;
-        if (!from.getWorld().equals(to.getWorld())) return;
+        if (to.getWorld() == null) return;
 
         if (isEnteringProtectedRegion(from, to)) {
             event.setCancelled(true);
@@ -76,6 +77,24 @@ public class CombatZoneListener implements Listener {
             return;
         }
         handleBlock(event.getPlayer(), event.getFrom(), event.getTo(), event);
+    }
+
+    /** 보트·말 등을 타고 들어가면 PlayerMoveEvent 가 안 불림 → 탈것 이동도 검사 */
+    @EventHandler
+    public void onVehicleMove(org.bukkit.event.vehicle.VehicleMoveEvent event) {
+        if (!plugin.getConfig().getBoolean("combat-zone.enabled", true)) return;
+        Location from = event.getFrom(), to = event.getTo();
+        if (from.getBlockX() == to.getBlockX() && from.getBlockY() == to.getBlockY() && from.getBlockZ() == to.getBlockZ()) return;
+        for (var passenger : event.getVehicle().getPassengers()) {
+            if (!(passenger instanceof Player player) || !plugin.getLifeStealManager().isCombatTagged(player.getUniqueId())) continue;
+            if (!isEnteringProtectedRegion(from, to)) return;
+            event.getVehicle().eject();
+            event.getVehicle().setVelocity(new org.bukkit.util.Vector());
+            event.getVehicle().teleport(from);
+            player.teleport(from.clone().add(0, 1, 0));
+            player.sendMessage("§c전투 중에는 이 구역에 들어갈 수 없습니다.");
+            return;
+        }
     }
 
     @EventHandler

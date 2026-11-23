@@ -42,7 +42,7 @@ public class SupplyChestRegistry {
     public int getChestCount() { return chests.size(); }
     public void reconcileChunk(org.bukkit.Chunk chunk) {
         for (Location loc : new ArrayList<>(chests.keySet())) {
-            if (!loc.getWorld().equals(chunk.getWorld()) || (loc.getBlockX() >> 4) != chunk.getX()
+            if (!loc.isWorldLoaded() || !chunk.getWorld().equals(loc.getWorld()) || (loc.getBlockX() >> 4) != chunk.getX()
                     || (loc.getBlockZ() >> 4) != chunk.getZ()) continue;
             if (loc.getBlock().getType() != Material.CHEST) {
                 var removed = consume(loc);

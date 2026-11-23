@@ -128,6 +128,7 @@ public class DeruyPlugin extends JavaPlugin {
         this.superKothManager = new KothManager(this, "superkoth", "SuperKOTH");
         this.locatorBarManager = new LocatorBarManager(this);
         this.bingoManager = new BingoManager(this);
+        this.bingoManager.restoreState();   // 재시작 전 진행 중이던 빙고 이어서
         this.supplyDropManager = new SupplyDropManager(this);
         this.superSupplyDropManager = new SuperSupplyDropManager(this);
         this.bountyManager = new BountyManager(this);
@@ -173,6 +174,7 @@ public class DeruyPlugin extends JavaPlugin {
         pm.registerEvents(new DragonListener(this), this);             // 드래곤 체력/알
         pm.registerEvents(new MiscRuleListener(this), this);           // 토템/사망이펙트/화살
         pm.registerEvents(new com.deruy.plugin.misc.CelebrationFireworkListener(), this); // 축하 폭죽 피해 차단
+        pm.registerEvents(new com.deruy.plugin.lifesteal.listeners.VillagerTradeListener(this), this); // 주민 거래 무제한(설정)
         pm.registerEvents(new com.deruy.plugin.timeline.TimelineListener(this), this);   // 영상용 킬·사망 기록
         pm.registerEvents(new BingoListener(this), this);
         pm.registerEvents(new BingoBoardGuiListener(), this);
@@ -341,7 +343,7 @@ public class DeruyPlugin extends JavaPlugin {
         if (kothManager != null) kothManager.stopScheduler();
         if (superKothManager != null) superKothManager.stopScheduler();
         if (locatorBarManager != null && locatorBarManager.isRunning()) locatorBarManager.shutdown(); // 켜 둔 설정 유지
-        if (bingoManager != null && bingoManager.isRunning()) bingoManager.stop();
+        if (bingoManager != null) bingoManager.shutdown(); // 상태는 남겨 재시작 후 이어서
         if (supplyDropManager != null) supplyDropManager.stop();
         if (superSupplyDropManager != null) superSupplyDropManager.stop();
         if (bountyManager != null && bountyManager.isRunning()) bountyManager.shutdown(); // 페어 저장 유지
@@ -482,6 +484,23 @@ public class DeruyPlugin extends JavaPlugin {
      * config의 sounds.<key> 섹션(sound-name, pitch, volume, range)에 따라 사운드를 재생한다.
      * range: "0"=재생안함(무음), "00"=서버 전체(거리무관 전원), 그 외 숫자=그 블록반경 안의 플레이어에게만.
      */
+    /**
+     * 효과음 이름 → 재생용 키. "entity.player.levelup", "minecraft:item.goat_horn.sound.5",
+     * 리소스팩 소리("deruy:..."), 옛 형식 "ENTITY_PLAYER_LEVELUP" 모두 받음.
+     * (Sound.valueOf 는 1.21에서 사용 중단 예정이라 옛 형식 변환에만 한 번 쓰고 실패해도 null)
+     */
+    @SuppressWarnings("deprecation")
+    public static String resolveSoundKey(String name) {
+        if (name == null || name.isBlank()) return null;
+        String n = name.trim();
+        if (n.contains(".") || n.contains(":")) {
+            String k = n.toLowerCase(java.util.Locale.ROOT);
+            return org.bukkit.NamespacedKey.fromString(k) == null ? null : k;
+        }
+        try { return org.bukkit.Sound.valueOf(n.toUpperCase(java.util.Locale.ROOT)).getKey().toString(); }
+        catch (RuntimeException e) { return null; }
+    }
+
     public void playConfiguredSound(String key, org.bukkit.Location loc) {
         var section = getConfig().getConfigurationSection("sounds." + key);
         if (section == null) return;
@@ -489,10 +508,8 @@ public class DeruyPlugin extends JavaPlugin {
         String soundName = section.getString("sound-name");
         if (soundName == null) return;
 
-        org.bukkit.Sound sound;
-        try {
-            sound = org.bukkit.Sound.valueOf(soundName.toUpperCase());
-        } catch (IllegalArgumentException e) {
+        String sound = resolveSoundKey(soundName);
+        if (sound == null) {
             getLogger().warning("sounds." + key + ".sound-name 값이 잘못됨: " + soundName);
             return;
         }

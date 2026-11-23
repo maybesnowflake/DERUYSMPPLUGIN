@@ -142,6 +142,7 @@ public class DragonListener implements Listener {
         final int[] elapsed = {0};
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (!player.isOnline()
+                    || !player.getWorld().equals(eggLoc.getWorld())   // 다른 월드로 가면 distance 가 예외 → 매초 오류
                     || player.getLocation().distance(eggLoc) > 4
                     || eggBlock.getType() != Material.DRAGON_EGG
                     || plugin.getLifeStealManager().isCombatTagged(player.getUniqueId())) {
@@ -153,7 +154,9 @@ public class DragonListener implements Listener {
             eggLoc.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, eggLoc.clone().add(.5, 1, .5), 12, .65, .7, .65, .04);
             if (elapsed[0] >= requiredSeconds) {
                 eggBlock.setType(Material.AIR);
-                player.getInventory().addItem(new ItemStack(Material.DRAGON_EGG));
+                // 인벤토리가 꽉 차 있으면 발밑에 떨어뜨림 (예전엔 알이 사라졌음)
+                player.getInventory().addItem(new ItemStack(Material.DRAGON_EGG)).values()
+                        .forEach(left -> player.getWorld().dropItemNaturally(player.getLocation(), left));
                 player.sendMessage("§5§l드래곤알을 획득했습니다!");
                 eggLoc.getWorld().spawnParticle(org.bukkit.Particle.END_ROD, eggLoc.clone().add(.5, 1, .5), 80, 1.2, 1.2, 1.2, .08);
                 cancelChanneling(player, null);
@@ -161,6 +164,28 @@ public class DragonListener implements Listener {
         }, 20L, 20L);
 
         channeling.put(player.getUniqueId(), task);
+    }
+
+    /** 피스톤으로 밀면 알이 아이템으로 튀어나와 30초 채널링 없이 가져갈 수 있음 → 막기 */
+    @EventHandler(ignoreCancelled = true)
+    public void onPistonExtend(org.bukkit.event.block.BlockPistonExtendEvent event) {
+        if (event.getBlocks().stream().anyMatch(b -> b.getType() == Material.DRAGON_EGG)) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPistonRetract(org.bukkit.event.block.BlockPistonRetractEvent event) {
+        if (event.getBlocks().stream().anyMatch(b -> b.getType() == Material.DRAGON_EGG)) event.setCancelled(true);
+    }
+
+    /** 폭발(위더 등)로 알이 부서져 아이템이 되는 것 막기 */
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplode(org.bukkit.event.entity.EntityExplodeEvent event) {
+        event.blockList().removeIf(b -> b.getType() == Material.DRAGON_EGG);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockExplode(org.bukkit.event.block.BlockExplodeEvent event) {
+        event.blockList().removeIf(b -> b.getType() == Material.DRAGON_EGG);
     }
 
     @EventHandler

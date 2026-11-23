@@ -44,6 +44,10 @@ public class DataStore {
         data = YamlConfiguration.loadConfiguration(file);
     }
 
+    /** 기능별 상태 저장용 (빙고 진행, 위험 계약 등) */
+    public org.bukkit.configuration.ConfigurationSection section(String path) { return data.getConfigurationSection(path); }
+    public void set(String path, Object value) { data.set(path, value); }
+
     public void save() {
         try {
             data.save(file);
