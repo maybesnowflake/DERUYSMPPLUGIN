@@ -67,7 +67,7 @@ public final class RandomEventManager implements Listener {
 
     @EventHandler public void rouletteClick(org.bukkit.event.inventory.InventoryClickEvent e){if(e.getView().getTopInventory().getHolder() instanceof EventRoulette.Gui)e.setCancelled(true);}
     @EventHandler public void rouletteDrag(org.bukkit.event.inventory.InventoryDragEvent e){if(e.getView().getTopInventory().getHolder() instanceof EventRoulette.Gui)e.setCancelled(true);}
-    @EventHandler public void join(PlayerJoinEvent e){applyPersistent();if(bar!=null)bar.addPlayer(e.getPlayer());}
+    @EventHandler public void join(PlayerJoinEvent e){if(active!=Type.STRENGTH_III)removeEventStrength(e.getPlayer()); /* 나가 있는 동안 이벤트가 끝났으면 무한 힘 III 회수 (Codex 리뷰) */applyPersistent();if(bar!=null)bar.addPlayer(e.getPlayer());}
     @EventHandler(ignoreCancelled=true) public void place(BlockPlaceEvent e){placedBlocks.add(key(e.getBlockPlaced()));if(on(Type.COBWEB_BAN)&&e.getBlockPlaced().getType()==Material.COBWEB)deny(e,e.getPlayer(),"거미줄을 사용할 수 없습니다.");}
     @EventHandler(ignoreCancelled=true) public void consume(PlayerItemConsumeEvent e){if(on(Type.POTION_BAN)&&(e.getItem().getType()==Material.POTION||e.getItem().getType()==Material.SPLASH_POTION||e.getItem().getType()==Material.LINGERING_POTION))deny(e,e.getPlayer(),"포션을 사용할 수 없습니다.");}
     @EventHandler(ignoreCancelled=true) public void resurrect(EntityResurrectEvent e){if(on(Type.TOTEM_BAN)&&e.getEntity() instanceof Player p)deny(e,p,"토템을 사용할 수 없습니다.");}
@@ -99,9 +99,30 @@ public final class RandomEventManager implements Listener {
         // New final = (base + final*(multiplier-1)) + original modifiers = old final*multiplier.
         event.setDamage(EntityDamageEvent.DamageModifier.BASE,base+finalDamage*(multiplier-1));
     }
-    private void shockwave(Player attacker,Entity target){double radius=plugin.getConfig().getDouble("random-events.mace-shockwave-radius",4);for(Entity near:target.getNearbyEntities(radius,radius,radius))if(near instanceof Player hit&&!hit.equals(attacker)){hit.addPotionEffect(new PotionEffect(PotionEffectType.INSTANT_DAMAGE,1,1));hit.setVelocity(hit.getLocation().toVector().subtract(target.getLocation().toVector()).normalize().multiply(1.2).setY(.5));}target.setVelocity(target.getVelocity().add(target.getLocation().toVector().subtract(attacker.getLocation().toVector()).normalize().multiply(1.2).setY(.5)));}
+    private void shockwave(Player attacker,Entity target){double radius=plugin.getConfig().getDouble("random-events.mace-shockwave-radius",4);var roles=plugin.getRoleManager();for(Entity near:target.getNearbyEntities(radius,radius,radius))if(near instanceof Player hit&&!hit.equals(attacker)){if(roles!=null&&(!roles.isPvpAllowed(attacker)||!roles.isPvpAllowed(hit)))continue; /* PvP 금지 역할은 충격파도 막음 (Codex 리뷰) */hit.addPotionEffect(new PotionEffect(PotionEffectType.INSTANT_DAMAGE,1,1));hit.setVelocity(hit.getLocation().toVector().subtract(target.getLocation().toVector()).normalize().multiply(1.2).setY(.5));}target.setVelocity(target.getVelocity().add(target.getLocation().toVector().subtract(attacker.getLocation().toVector()).normalize().multiply(1.2).setY(.5)));}
 
     @EventHandler(ignoreCancelled=true) public void death(EntityDeathEvent e){Player k=e.getEntity().getKiller();if(k==null)return;if(on(Type.DOUBLE_DROPS)&&!(e.getEntity() instanceof Player))e.getDrops().addAll(e.getDrops().stream().map(ItemStack::clone).toList());if(on(Type.POST_KILL_SPEED))k.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,100,3));if(on(Type.KILL_INVISIBILITY))k.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,plugin.getConfig().getInt("random-events.kill-invisibility-seconds",30)*20,0,false,false,false));if(on(Type.KILL_DROP))giveAt(e.getEntity().getLocation(),"random-events.kill-drop-items");if(on(Type.KILL_VOUCHER)&&e.getEntity() instanceof Player victim&&!victim.equals(k))giveAt(e.getEntity().getLocation(),"random-events.kill-voucher-items");}
+    /** 피스톤으로 민 설치 블록은 옮겨진 자리로 기록 이동 (안 하면 드롭 2배로 무한 복사, Codex 리뷰) */
+    @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true) public void pistonExtend(org.bukkit.event.block.BlockPistonExtendEvent e){movePlaced(e.getBlocks(),e.getDirection());}
+    @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true) public void pistonRetract(org.bukkit.event.block.BlockPistonRetractEvent e){
+        // 당겨지는 블록은 피스톤 쪽(피스톤이 바라보는 반대 방향)으로 한 칸
+        org.bukkit.block.BlockFace facing=e.getBlock().getBlockData() instanceof org.bukkit.block.data.Directional d?d.getFacing():e.getDirection();
+        movePlaced(e.getBlocks(),facing.getOppositeFace());
+    }
+    void movePlaced(List<Block> blocks,org.bukkit.block.BlockFace dir){
+        List<String> moved=new ArrayList<>();
+        for(Block b:blocks)if(placedBlocks.remove(key(b)))moved.add(key(b.getRelative(dir)));
+        placedBlocks.addAll(moved);   // 다 지운 뒤 추가 (한 줄로 밀 때 서로 덮어쓰지 않게)
+    }
+    /** 모래·자갈처럼 떨어지는 설치 블록: 떨어지기 시작하면 엔티티로, 착지하면 새 자리로 기록 이동 */
+    private final Set<UUID> fallingPlaced=new HashSet<>();
+    @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true) public void falling(org.bukkit.event.entity.EntityChangeBlockEvent e){
+        if(!(e.getEntity() instanceof org.bukkit.entity.FallingBlock fb))return;
+        if(e.getTo().isAir()){if(placedBlocks.remove(key(e.getBlock())))fallingPlaced.add(fb.getUniqueId());}
+        else if(fallingPlaced.remove(fb.getUniqueId()))placedBlocks.add(key(e.getBlock()));
+    }
+    boolean isPlacedForTest(Block b){return placedBlocks.contains(key(b));}
+    void markPlacedForTest(Block b){placedBlocks.add(key(b));}
     @EventHandler(ignoreCancelled=true) public void blockDrops(BlockDropItemEvent e){boolean placed=placedBlocks.remove(key(e.getBlockState().getBlock()));if(on(Type.DOUBLE_DROPS)&&!placed)e.getItems().forEach(i->e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(),i.getItemStack().clone()));if(on(Type.CROP_REWARD)&&mature(e.getBlockState()))giveAt(e.getBlock().getLocation(),"random-events.crop-reward-items");}
     private boolean mature(org.bukkit.block.BlockState state){if(!(state.getBlockData() instanceof org.bukkit.block.data.Ageable a))return false;return a.getAge()==a.getMaximumAge();}
     private void giveAt(Location l,String path){plugin.getSupplyChestRegistry().rollRewards(plugin.getConfig().getStringList(path),plugin.getLogger()).forEach(i->l.getWorld().dropItemNaturally(l,i));}

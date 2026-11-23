@@ -43,6 +43,12 @@ public class LocatorBarManager implements GameEvent {
         Bukkit.broadcastMessage("§b§l로케이터바 §e가 활성화되었습니다. (은신/투명 무시하고 항상 표시)");
     }
 
+    /** 서버 종료·리로드용: 작업만 정리하고 locatorbar.enabled 설정은 그대로 (다음 시작 때 복구, Codex 리뷰) */
+    public void shutdown() {
+        running = false;
+        if (task != null) { task.cancel(); task = null; }
+    }
+
     @Override
     public void stop() {
         if (!running) return;
