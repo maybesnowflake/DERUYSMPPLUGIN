@@ -57,7 +57,7 @@ class LimitedItemDestructionTest {
         assertEquals(0, limits.getCurrentCount("custom_netherite_sword"));
     }
 
-    @Test void shulkerContentsAreFreedWithTheBox() {
+    @Test void shulkerContentsFollowHowTheBoxWasDestroyed() {
         var sword = limitedSword();
         var box = new ItemStack(Material.SHULKER_BOX);
         var meta = (BlockStateMeta) box.getItemMeta();
@@ -65,7 +65,10 @@ class LimitedItemDestructionTest {
         state.getInventory().setItem(3, sword);
         meta.setBlockState(state); box.setItemMeta(meta);
         Item entity = server.addSimpleWorld("w").dropItem(new org.bukkit.Location(server.getWorld("w"), 0, 64, 0), box);
-        new LimitedItemDestructionListener(plugin).onItemRemoved(new EntityRemoveEvent(entity, EntityRemoveEvent.Cause.DEATH));
-        assertEquals(0, limits.getCurrentCount("custom_netherite_sword"));
+        var listener = new LimitedItemDestructionListener(plugin);
+        listener.onItemRemoved(new EntityRemoveEvent(entity, EntityRemoveEvent.Cause.DEATH));
+        assertEquals(1, limits.getCurrentCount("custom_netherite_sword"), "용암·폭발이면 내용물은 쏟아져 살아남음");
+        listener.onItemRemoved(new EntityRemoveEvent(entity, EntityRemoveEvent.Cause.OUT_OF_WORLD));
+        assertEquals(0, limits.getCurrentCount("custom_netherite_sword"), "보이드면 통째로 사라짐");
     }
 }
