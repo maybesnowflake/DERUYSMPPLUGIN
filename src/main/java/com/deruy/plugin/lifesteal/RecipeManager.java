@@ -54,6 +54,7 @@ public class RecipeManager {
             if (section == null) continue;
             registerFromConfig(recipeName, section);
         }
+        Bukkit.updateRecipes(); // 리로드해도 접속 중인 사람 레시피 북에 바로 반영
     }
 
     private void registerFromConfig(String recipeName, ConfigurationSection section) {

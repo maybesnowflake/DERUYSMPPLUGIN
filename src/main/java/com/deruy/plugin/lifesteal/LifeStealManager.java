@@ -201,6 +201,7 @@ public class LifeStealManager {
         if (expiry == null) return false;
         if (System.currentTimeMillis() > expiry) {
             combatTagged.remove(uuid);
+            lastAttackers.remove(uuid);   // 전투가 끝나면 상대 기록도 정리 (계속 쌓이지 않게)
             return false;
         }
         return true;

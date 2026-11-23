@@ -44,7 +44,21 @@ public class DeruyVoicePitchPlugin implements VoicechatPlugin {
     private final ConcurrentHashMap<UUID, OpusDecoder> decoders = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, OpusEncoder> encoders = new ConcurrentHashMap<>();
     // 플레이어별 리샘플된 오디오 FIFO. 매 패킷마다 리샘플 결과를 여기 쌓고, 정확히 960개씩 꺼내 인코딩한다.
-    private final ConcurrentHashMap<UUID, Deque<Float>> fifoBuffers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, FloatFifo> fifoBuffers = new ConcurrentHashMap<>();
+
+    /** float 고리 버퍼 (예전 Deque<Float> 는 샘플마다 객체를 만들어 초당 수만 개 쓰레기 발생) */
+    static final class FloatFifo {
+        private float[] buf = new float[BUFFER_SIZE * 8];
+        private int head, size;
+        int size() { return size; }
+        void clear() { head = 0; size = 0; }
+        void add(float v) {
+            if (size == buf.length) { float[] n = new float[buf.length * 2]; for (int i = 0; i < size; i++) n[i] = buf[(head + i) % buf.length]; buf = n; head = 0; }
+            buf[(head + size++) % buf.length] = v;
+        }
+        float poll() { float v = buf[head]; head = (head + 1) % buf.length; size--; return v; }
+        void dropOldest(int n) { n = Math.min(n, size); head = (head + n) % buf.length; size -= n; }
+    }
 
     private VoicechatApi api;
 
@@ -80,6 +94,8 @@ public class DeruyVoicePitchPlugin implements VoicechatPlugin {
         UUID playerId = event.getSenderConnection().getPlayer().getUuid();
 
         if (!tracker.isActive(playerId)) {
+            // 효과가 끝나면 남은 소리·코덱 상태를 버림 (다음에 켜질 때 지난 소리가 섞이지 않게)
+            if (fifoBuffers.containsKey(playerId)) cleanupPlayer(playerId);
             return;
         }
 
@@ -87,7 +103,7 @@ public class DeruyVoicePitchPlugin implements VoicechatPlugin {
             byte[] opusData = event.getPacket().getOpusEncodedData();
 
             OpusEncoder encoder = encoders.computeIfAbsent(playerId, id -> api.createEncoder());
-            Deque<Float> fifo = fifoBuffers.computeIfAbsent(playerId, id -> new ArrayDeque<>());
+            FloatFifo fifo = fifoBuffers.computeIfAbsent(playerId, id -> new FloatFifo());
 
             if (opusData == null || opusData.length == 0) {
                 // 침묵 구간: FIFO를 통째로 비워서 다음 발화 시작을 깔끔하게 만든다.
@@ -101,14 +117,12 @@ public class DeruyVoicePitchPlugin implements VoicechatPlugin {
 
             float[] resampled = resamplePitchDown(pcm, computePitchFactor());
             for (float sample : resampled) {
-                fifo.addLast(sample);
+                fifo.add(sample);
             }
 
             // 상한을 넘으면 매 패킷 조금씩 버리는 대신, 한번에 목표치까지 정리한다 (지지직 잡음 최소화).
             if (fifo.size() > SOFT_TRIM_THRESHOLD) {
-                while (fifo.size() > SOFT_TRIM_TARGET) {
-                    fifo.pollFirst();
-                }
+                fifo.dropOldest(fifo.size() - SOFT_TRIM_TARGET);
             }
 
             if (fifo.size() < BUFFER_SIZE) {
@@ -123,7 +137,7 @@ public class DeruyVoicePitchPlugin implements VoicechatPlugin {
 
             short[] outputPcm = new short[BUFFER_SIZE];
             for (int i = 0; i < BUFFER_SIZE; i++) {
-                float v = fifo.pollFirst();
+                float v = fifo.poll();
                 v = Math.max(-1f, Math.min(1f, v));
                 outputPcm[i] = (short) (v * 32767f);
             }
@@ -167,9 +181,13 @@ public class DeruyVoicePitchPlugin implements VoicechatPlugin {
      * 플레이어가 투명화를 해제했을 때 호출. 코덱/버퍼 상태를 정리해서
      * 메모리 누수를 막고, 다음에 다시 투명화했을 때 새 상태로 시작하게 함.
      */
+    /** 나갈 때·효과가 끝날 때: 네이티브 Opus 코덱은 close 해야 메모리가 풀림 */
     public void cleanupPlayer(UUID playerId) {
-        decoders.remove(playerId);
-        encoders.remove(playerId);
+        OpusDecoder d = decoders.remove(playerId);
+        OpusEncoder e = encoders.remove(playerId);
         fifoBuffers.remove(playerId);
+        try { if (d != null) d.close(); } catch (Exception ignored) { }
+        try { if (e != null) e.close(); } catch (Exception ignored) { }
     }
+
 }

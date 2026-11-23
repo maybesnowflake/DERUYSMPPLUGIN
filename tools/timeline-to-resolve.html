@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DERUY 타임라인 → DaVinci 마커</title>
+<style>
+  :root { --bg:#14161b; --panel:#1d2027; --line:#2c313b; --text:#e8eaef; --dim:#9aa3b2; --accent:#f0b429; --ok:#3ecf8e; --bad:#ef5b5b; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--dim); margin: 0 0 22px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border:1px solid var(--line); border-radius: 10px; padding: 16px; }
+  h2 { font-size: 14px; letter-spacing: .02em; color: var(--accent); margin: 0 0 12px; }
+  label { display:block; color: var(--dim); font-size: 13px; margin: 10px 0 4px; }
+  input, select { width:100%; background:#101217; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font:inherit; }
+  input[type=checkbox] { width:auto; }
+  .drop { border:2px dashed var(--line); border-radius:10px; padding:26px; text-align:center; color:var(--dim); cursor:pointer; }
+  .drop.over { border-color: var(--accent); color: var(--text); }
+  .types { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:8px 14px; }
+  .types label { display:flex; gap:8px; align-items:center; margin:0; color:var(--text); font-size:14px; }
+  .sw { width:12px; height:12px; border-radius:3px; display:inline-block; flex:none; }
+  .row { display:flex; gap:10px; align-items:end; }
+  .row > div { flex:1; }
+  button { background: var(--accent); color:#1a1300; border:0; border-radius:8px; padding:11px 18px; font:600 15px system-ui, sans-serif; cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  .ghost { background: transparent; color: var(--text); border:1px solid var(--line); }
+  .status { margin: 14px 0 0; color: var(--dim); }
+  .status b { color: var(--text); }
+  table { width:100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 500; }
+  td.tc { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .out { color: var(--dim); text-decoration: line-through; }
+  .hint { color: var(--dim); font-size: 13px; margin: 6px 0 0; }
+  .err { color: var(--bad); }
+  ol { margin: 6px 0 0 18px; padding:0; color: var(--dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>DERUY 타임라인 → DaVinci Resolve 마커</h1>
+  <p class="sub">서버의 <code>plugins/DeruyPlugin/timeline/날짜.csv</code>를 넣으면, 녹화 영상 위에 킬·수레 파괴·이벤트 시작 지점이 마커로 찍히는 파일(EDL)을 만들어요. 파일은 이 컴퓨터 밖으로 나가지 않아요.</p>
+
+  <div class="grid">
+    <section>
+      <h2>1. 타임라인 CSV</h2>
+      <div class="drop" id="drop">여기에 CSV 파일을 끌어다 놓거나 눌러서 고르기<input type="file" id="file" accept=".csv,text/csv" hidden></div>
+      <p class="status" id="loaded">아직 파일이 없어요.</p>
+    </section>
+
+    <section>
+      <h2>2. 녹화 정보</h2>
+      <label for="recName">녹화 파일 이름 (OBS 기본 이름이면 시작 시각을 자동으로 읽어요)</label>
+      <input id="recName" placeholder="예: 2026-11-23 21-05-09.mkv">
+      <label for="recStart">녹화 시작 시각</label>
+      <input id="recStart" type="datetime-local" step="1">
+      <div class="row">
+        <div><label for="fps">타임라인 프레임 (fps)</label>
+          <select id="fps"><option>24</option><option>25</option><option selected>30</option><option>50</option><option>60</option></select></div>
+        <div><label for="tcStart">타임라인 시작 타임코드</label><input id="tcStart" value="01:00:00:00"></div>
+      </div>
+      <div class="row">
+        <div><label for="offset">미세 조정 (초, ±)</label><input id="offset" type="number" step="0.1" value="0"></div>
+        <div><label for="before">마커를 일찍 찍기 (초)</label><input id="before" type="number" step="0.5" min="0" value="0"></div>
+      </div>
+      <p class="hint">녹화와 서버 시계가 어긋나면 미세 조정으로 맞춰요. 킬 장면을 앞부분부터 보고 싶으면 "일찍 찍기"를 3~5초로.</p>
+    </section>
+  </div>
+
+  <section style="margin-top:16px">
+    <h2>3. 넣을 기록</h2>
+    <div class="types" id="types"></div>
+  </section>
+
+  <section style="margin-top:16px">
+    <h2>4. 미리보기와 내보내기</h2>
+    <div class="row" style="align-items:center">
+      <div class="status" id="summary">CSV와 녹화 시작 시각을 넣으면 여기에 마커가 보여요.</div>
+      <button id="download" disabled>마커 파일(.edl) 받기</button>
+      <button id="copy" class="ghost" disabled>내용 복사</button>
+    </div>
+    <p class="status" id="saved"></p>
+    <ol>
+      <li>DaVinci Resolve에서 해당 타임라인을 열고</li>
+      <li>미디어 풀에서 타임라인 우클릭 → <b>Timelines → Import → Timeline Markers from EDL...</b></li>
+      <li>받은 .edl 파일 선택</li>
+    </ol>
+    <table><thead><tr><th>타임코드</th><th>시각</th><th>종류</th><th>마커 이름</th></tr></thead><tbody id="rows"></tbody></table>
+  </section>
+</main>
+
+<script>
+// ── 순수 계산 (node 로도 테스트) ──────────────────────────
+const TYPES = {
+  KILL:                ["킬",           "Red",      true],
+  DEATH:               ["사망",         "Rose",     false],
+  HEART:               ["하트 변화",    "Pink",     false],
+  RANDOM_EVENT_START:  ["랜덤 이벤트 시작", "Yellow", true],
+  RANDOM_EVENT_END:    ["랜덤 이벤트 끝",   "Sand",   false],
+  KOTH_START:          ["KOTH 시작",    "Purple",   true],
+  KOTH_CAPTURE:        ["KOTH 점령",    "Fuchsia",  true],
+  KOTH_END:            ["KOTH 끝",      "Lavender", false],
+  BOUNTY_KILL:         ["바운티 처치",  "Cyan",     true],
+  SUPPLY_DROP:         ["보급",         "Green",    true],
+  TRANSPORT_START:     ["수송 출발",    "Blue",     true],
+  TRANSPORT_DAMAGE:    ["수레 손상",    "Sky",      true],
+  TRANSPORT_DESTROYED: ["수레 파괴",    "Mint",     true],
+  TRANSPORT_ARRIVED:   ["수레 도착",    "Lemon",    true],
+};
+const COLOR_HEX = { Red:"#e64b3d", Rose:"#ff6b9a", Pink:"#ff8fc7", Yellow:"#f2d335", Sand:"#c8a56a", Purple:"#9b59d6", Fuchsia:"#d63ccd",
+  Lavender:"#a99cf0", Cyan:"#3ad1d6", Green:"#45c35c", Blue:"#3d7fe6", Sky:"#76c3f5", Mint:"#7de0b5", Lemon:"#e9f07a", Cocoa:"#7a5a40", Cream:"#f3e6c8" };
+
+/** CSV 한 덩어리 → 행 배열. 따옴표·쉼표·줄바꿈·BOM 처리 */
+function parseCsv(text) {
+  text = text.replace(/^﻿/, "");
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); cell = ""; if (row.length > 1 || row[0] !== "") rows.push(row); row = [];
+    } else cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+/** 타임라인 CSV 행 → 기록. 엑셀 수식 방지용 앞의 ' 는 떼어냄 */
+function toRecords(rows) {
+  const out = [];
+  for (const r of rows.slice(1)) {
+    if (r.length < 4) continue;
+    const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(r[0].trim());
+    if (!m) continue;
+    const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    const un = s => (s || "").replace(/^'(?=[=+\-@])/, "");
+    out.push({ time: t, type: un(r[1]), who: un(r[2]), detail: un(r[3]), world: r[4] || "" });
+  }
+  return out;
+}
+
+/** OBS 등 파일 이름의 날짜·시각 → Date (없으면 null) */
+function startFromName(name) {
+  const m = /(\d{4})[-_.](\d{2})[-_.](\d{2})[ _T-]+(\d{2})[-_.:](\d{2})[-_.:](\d{2})/.exec(name || "");
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : null;
+}
+
+function parseTc(tc, fps) {
+  const m = /^(\d{1,2}):(\d{2}):(\d{2})[:;](\d{2})$/.exec((tc || "").trim());
+  if (!m || +m[4] >= fps) return null;
+  return ((+m[1] * 60 + +m[2]) * 60 + +m[3]) * fps + +m[4];
+}
+function frameToTc(f, fps) {
+  const p = n => String(n).padStart(2, "0");
+  const ff = f % fps, s = Math.floor(f / fps), ss = s % 60, mm = Math.floor(s / 60) % 60, hh = Math.floor(s / 3600);
+  return `${p(hh)}:${p(mm)}:${p(ss)}:${p(ff)}`;
+}
+
+function markerName(rec) {
+  const label = (TYPES[rec.type] || [rec.type])[0];
+  const parts = [label, rec.who, rec.detail].filter(Boolean);
+  return parts.join(" · ").replace(/\|/g, "/").replace(/[\r\n]+/g, " ").slice(0, 120);
+}
+
+/**
+ * 기록 → 마커. 녹화 시작 이전·이후(길이 모름 → 이전만) 제외.
+ * opts: { start: Date, fps, tcStart, offsetSec, beforeSec, types: Set }
+ */
+function buildMarkers(records, opts) {
+  const base = parseTc(opts.tcStart, opts.fps);
+  if (base == null) throw new Error("타임라인 시작 타임코드 형식이 잘못됐어요 (예: 01:00:00:00)");
+  const out = [];
+  for (const rec of records) {
+    if (!opts.types.has(rec.type)) continue;
+    const sec = (rec.time - opts.start) / 1000 + (opts.offsetSec || 0) - (opts.beforeSec || 0);
+    const inRange = sec >= 0;
+    const frame = base + Math.round(Math.max(0, sec) * opts.fps);
+    out.push({ rec, sec, inRange, frame, tc: frameToTc(frame, opts.fps), color: (TYPES[rec.type] || [, "Cream"])[1], name: markerName(rec) });
+  }
+  return out;
+}
+
+/** DaVinci Resolve 가 마커를 내보낼 때 쓰는 것과 같은 EDL 형식 */
+function toEdl(markers, fps, title) {
+  const lines = [`TITLE: ${title}`, "FCM: NON-DROP FRAME", ""];
+  let n = 1;
+  for (const m of markers.filter(x => x.inRange)) {
+    const a = m.tc, b = frameToTc(m.frame + 1, fps);
+    lines.push(`${String(n++).padStart(3, "0")}  001      V     C        ${a} ${b} ${a} ${b}  `);
+    lines.push(` |C:ResolveColor${m.color} |M:${m.name} |D:1`);
+    lines.push("");
+  }
+  return lines.join("\r\n");
+}
+
+if (typeof module !== "undefined") module.exports = { parseCsv, toRecords, startFromName, parseTc, frameToTc, buildMarkers, toEdl, markerName, TYPES };
+
+// ── 화면 ──────────────────────────────────────────
+if (typeof document !== "undefined") {
+  const $ = id => document.getElementById(id);
+  let records = [], csvName = "";
+  const typesBox = $("types");
+  for (const [k, [label, color, on]] of Object.entries(TYPES)) {
+    const l = document.createElement("label");
+    l.innerHTML = `<input type="checkbox" data-type="${k}" ${on ? "checked" : ""}><span class="sw" style="background:${COLOR_HEX[color]}"></span>${label} <span style="color:var(--dim);font-size:12px">${k}</span>`;
+    typesBox.appendChild(l);
+  }
+  const pad = n => String(n).padStart(2, "0");
+  const toLocalInput = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const fromLocalInput = v => { const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(v); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) : null; };
+
+  async function load(file) {
+    try { localStorage.setItem("deruy-tl-last", file.name); } catch (e) {}
+    const text = await file.text();
+    records = toRecords(parseCsv(text)); csvName = file.name;
+    $("loaded").innerHTML = records.length ? `<b>${file.name}</b> · 기록 <b>${records.length}</b>건` : `<span class="err">${file.name}: 타임라인 형식의 기록을 찾지 못했어요.</span>`;
+    if (records.length && !$("recStart").value) $("recStart").value = toLocalInput(records[0].time);
+    render();
+  }
+  $("drop").onclick = () => $("file").click();
+  $("file").onchange = e => e.target.files[0] && load(e.target.files[0]);
+  $("drop").ondragover = e => { e.preventDefault(); $("drop").classList.add("over"); };
+  $("drop").ondragleave = () => $("drop").classList.remove("over");
+  $("drop").ondrop = e => { e.preventDefault(); $("drop").classList.remove("over"); e.dataTransfer.files[0] && load(e.dataTransfer.files[0]); };
+  $("recName").oninput = () => { const d = startFromName($("recName").value); if (d) { $("recStart").value = toLocalInput(d); render(); } };
+  for (const id of ["recStart", "fps", "tcStart", "offset", "before"]) $(id).oninput = render;
+  typesBox.onchange = render;
+  try { for (const id of ["fps", "tcStart"]) { const v = localStorage.getItem("deruy-tl-" + id); if (v) $(id).value = v; } } catch (e) {}
+
+  let current = [];
+  function render() {
+    const rows = $("rows"); rows.innerHTML = ""; $("download").disabled = true; $("copy").disabled = true; current = [];
+    const start = fromLocalInput($("recStart").value), fps = +$("fps").value;
+    try { for (const id of ["fps", "tcStart"]) localStorage.setItem("deruy-tl-" + id, $(id).value); } catch (e) {}
+    if (!records.length || !start) return;
+    const types = new Set([...typesBox.querySelectorAll("input:checked")].map(x => x.dataset.type));
+    try { current = buildMarkers(records, { start, fps, tcStart: $("tcStart").value, offsetSec: +$("offset").value || 0, beforeSec: +$("before").value || 0, types }); }
+    catch (e) { $("summary").innerHTML = `<span class="err">${e.message}</span>`; return; }
+    const ok = current.filter(m => m.inRange).length;
+    $("summary").innerHTML = `마커 <b>${ok}</b>개` + (current.length - ok ? ` · 녹화 시작 전 기록 ${current.length - ok}개는 제외` : "");
+    $("download").disabled = ok === 0; $("copy").disabled = ok === 0;
+    for (const m of current) {
+      const tr = document.createElement("tr"); if (!m.inRange) tr.className = "out";
+      const t = m.rec.time; const clock = `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+      tr.innerHTML = `<td class="tc">${m.inRange ? m.tc : "녹화 전"}</td><td class="tc">${clock}</td><td><span class="sw" style="background:${COLOR_HEX[m.color]}"></span> ${(TYPES[m.rec.type] || [m.rec.type])[0]}</td><td></td>`;
+      tr.lastChild.textContent = m.name;
+      rows.appendChild(tr);
+    }
+  }
+  // claude.ai 에 올린 페이지는 downloads 기능으로, 파일로 직접 연 경우엔 보통 다운로드로
+  let dl = null;
+  try { if (window.claude && window.claude.use) window.claude.use("downloads").then(d => { dl = d; }).catch(() => {}); } catch (e) {}
+  const edlNow = () => {
+    const title = (csvName || "DERUY timeline").replace(/\.csv$/i, "");
+    return { filename: `DERUY_markers_${title}.edl`, text: toEdl(current, +$("fps").value, "DERUY " + title) };
+  };
+  $("download").onclick = async () => {
+    const { filename, text } = edlNow();
+    if (dl) {
+      try { await dl.save({ filename, data: new Blob([text], { type: "text/plain;charset=utf-8" }) }); $("saved").textContent = "저장했어요: " + filename; }
+      catch (e) { $("saved").textContent = "저장이 취소됐거나 막혔어요. 아래 '내용 복사'로 붙여 넣어 .edl 파일로 저장해도 돼요."; }
+      return;
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" })); a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    $("saved").textContent = "받기 시작: " + filename;
+  };
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText(edlNow().text); $("saved").textContent = "복사했어요. 메모장에 붙여 넣고 .edl 로 저장하세요 (인코딩 UTF-8)."; }
+    catch (e) { $("saved").textContent = "복사가 막혔어요."; }
+  };
+}
+</script>
+</body>
+</html>

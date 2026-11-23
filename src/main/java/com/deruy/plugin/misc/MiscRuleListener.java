@@ -32,7 +32,10 @@ import java.util.UUID;
 public class MiscRuleListener implements Listener {
 
     private final DeruyPlugin plugin;
-    private final Map<UUID, List<PotionEffect>> storedEffects = new HashMap<>();
+    /** 죽은 뒤 리스폰 전까지 보관. 하트 0으로 밴돼 리스폰하지 않는 사람 것이 쌓이지 않게 최근 500명만 */
+    private final Map<UUID, List<PotionEffect>> storedEffects = new java.util.LinkedHashMap<>() {
+        @Override protected boolean removeEldestEntry(Map.Entry<UUID, List<PotionEffect>> e) { return size() > 500; }
+    };
 
     public MiscRuleListener(DeruyPlugin plugin) {
         this.plugin = plugin;

@@ -348,7 +348,7 @@ death:
   # 사망시 드롭되는 아이템들이 흩뿌려지는 반경(블록). 0이면 원래처럼 한 곳에 모아 떨어짐.
   drop-scatter-radius: 3.0
 
-# 사망/밴 시점에 재생되는 사운드. sound-name은 Bukkit Sound enum 이름 아무거나 가능
+# 사망/밴 시점에 재생되는 사운드. sound-name 은 "entity.wither.spawn" 같은 소리 키(권장, 리소스팩 소리·염소 뿔 "item.goat_horn.sound.5" 도 가능) 또는 옛 형식 ENTITY_WITHER_SPAWN
 # (마인크래프트에 내장된 소리들, 예: ENTITY_WITHER_SPAWN, ENTITY_ENDER_DRAGON_DEATH 등).
 # range: "0"=재생안함(무음), "00"=서버 전체(거리무관 전원에게), 그 외 숫자=그 블록반경 안의 플레이어에게만 들림.
 sounds:
