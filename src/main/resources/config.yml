@@ -529,7 +529,7 @@ random-events:
     TNT_DOUBLE_DAMAGE: 'TNT 피해 2배'
     PROJECTILE_BAN: '투사체 금지'
     KILL_INVISIBILITY: '처치 시 투명화, 공격하면 해제'
-    KILL_VOUCHER: '처치 시 상품권 드롭'
+    KILL_VOUCHER: '플레이어 처치 시 상품권 드롭'
     MACE_DOUBLE_DAMAGE: '철퇴 피해 2배'
     PROJECTILE_WITHER: '투사체 적중 시 위더 II'
     COBWEB_BAN: '거미줄 설치 금지'
