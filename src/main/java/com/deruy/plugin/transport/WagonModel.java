@@ -28,6 +28,8 @@ public final class WagonModel {
     public WagonModel(JavaPlugin plugin) throws IOException {
         File file = new File(plugin.getDataFolder(),"transport-model.yml");
         if (!file.exists()) plugin.saveResource("transport-model.yml",false);
+        // 리소스팩 없이 쓰는 블록 조립판 (교체용 참고 파일)
+        if (!new File(plugin.getDataFolder(),"transport-model-blocks.yml").exists()) plugin.saveResource("transport-model-blocks.yml",false);
         parts = read(file);
     }
     public static List<Part> read(File file) throws IOException {
