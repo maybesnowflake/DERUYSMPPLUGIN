@@ -19,6 +19,14 @@ lifesteal:
     ender-pearl-tp-blocked: true
     ender-eyes-blocked: true
 
+  # pending #9: 주민 거래 무제한 (잠기지 않고 값도 오르지 않음). 끄면 바로 원래대로
+  unlimited-villager-trades: false
+
+  # pending #6·#11: 바닐라 레시피 제거 (위 recipes 의 커스텀 철퇴·황금 사과로 대체). 다시 켜려면 false 후 서버 재시작
+  remove-vanilla-recipes:
+    mace: true
+    golden-apple: true
+
   # pending #13: 네더라이트 "장비 제작(스미싱 업그레이드)"만 차단. 기존 장비는 사용 가능.
   recipe-block:
     netherite-upgrade-smithing: false

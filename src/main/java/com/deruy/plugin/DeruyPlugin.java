@@ -174,6 +174,7 @@ public class DeruyPlugin extends JavaPlugin {
         pm.registerEvents(new DragonListener(this), this);             // 드래곤 체력/알
         pm.registerEvents(new MiscRuleListener(this), this);           // 토템/사망이펙트/화살
         pm.registerEvents(new com.deruy.plugin.misc.CelebrationFireworkListener(), this); // 축하 폭죽 피해 차단
+        pm.registerEvents(new com.deruy.plugin.lifesteal.listeners.VillagerTradeListener(this), this); // 주민 거래 무제한(설정)
         pm.registerEvents(new com.deruy.plugin.timeline.TimelineListener(this), this);   // 영상용 킬·사망 기록
         pm.registerEvents(new BingoListener(this), this);
         pm.registerEvents(new BingoBoardGuiListener(), this);
