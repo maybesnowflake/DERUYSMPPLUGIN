@@ -114,12 +114,14 @@ public final class RandomEventManager implements Listener {
         for(Block b:blocks)if(placedBlocks.remove(key(b)))moved.add(key(b.getRelative(dir)));
         placedBlocks.addAll(moved);   // 다 지운 뒤 추가 (한 줄로 밀 때 서로 덮어쓰지 않게)
     }
-    /** 모래·자갈처럼 떨어지는 설치 블록: 떨어지기 시작하면 엔티티로, 착지하면 새 자리로 기록 이동 */
-    private final Set<UUID> fallingPlaced=new HashSet<>();
+    /** 모래·자갈처럼 떨어지는 설치 블록: 떨어지는 엔티티 자체에 표시해 두고, 착지하면 새 자리로 기록 이동.
+     *  엔티티가 아이템으로 부서지거나 사라지면 표시도 같이 사라짐 → 따로 쌓이는 목록 없음 (Codex 리뷰 2차) */
+    private static final NamespacedKey FALLING_PLACED=new NamespacedKey("deruy","placed_falling");
     @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true) public void falling(org.bukkit.event.entity.EntityChangeBlockEvent e){
         if(!(e.getEntity() instanceof org.bukkit.entity.FallingBlock fb))return;
-        if(e.getTo().isAir()){if(placedBlocks.remove(key(e.getBlock())))fallingPlaced.add(fb.getUniqueId());}
-        else if(fallingPlaced.remove(fb.getUniqueId()))placedBlocks.add(key(e.getBlock()));
+        var pdc=fb.getPersistentDataContainer();
+        if(e.getTo().isAir()){if(placedBlocks.remove(key(e.getBlock())))pdc.set(FALLING_PLACED,org.bukkit.persistence.PersistentDataType.BYTE,(byte)1);}
+        else if(pdc.has(FALLING_PLACED,org.bukkit.persistence.PersistentDataType.BYTE))placedBlocks.add(key(e.getBlock()));
     }
     boolean isPlacedForTest(Block b){return placedBlocks.contains(key(b));}
     void markPlacedForTest(Block b){placedBlocks.add(key(b));}
