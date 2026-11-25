@@ -91,7 +91,7 @@ public final class HeartCommand implements CommandExecutor, TabCompleter {
     @Override public List<String> onTabComplete(CommandSender s, Command c, String a, String[] args) {
         if (!s.hasPermission("deruy.heart.admin")) return List.of();
         List<String> choices = args.length == 1 ? List.of("info", "set", "add", "remove", "revive", "giveitem")
-            : args.length == 2 ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList()
+            : args.length == 2 ? com.deruy.plugin.misc.Online.players().stream().map(Player::getName).toList()
             : args.length == 3 ? List.of("1", "5", "10") : List.of();
         String prefix = args[args.length-1].toLowerCase(Locale.ROOT);
         return choices.stream().filter(v -> v.toLowerCase(Locale.ROOT).startsWith(prefix)).toList();

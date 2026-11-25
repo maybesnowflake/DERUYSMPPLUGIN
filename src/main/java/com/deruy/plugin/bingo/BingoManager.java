@@ -273,7 +273,7 @@ public class BingoManager implements GameEvent {
     private void giveRewardsToTeam(String team) {
         var rewardEntries = plugin.getConfig().getStringList("bingo.reward-items");
 
-        for (var onlinePlayer : Bukkit.getOnlinePlayers()) {
+        for (var onlinePlayer : com.deruy.plugin.misc.Online.players()) {
             if (!team.equals(getTeam(onlinePlayer))) continue;
 
             var items = plugin.getSupplyChestRegistry().rollRewards(rewardEntries, plugin.getLogger());
@@ -314,7 +314,7 @@ public class BingoManager implements GameEvent {
             if (m != null) wanted.add(m);
         }
         if (wanted.isEmpty()) return;
-        for (Player p : Bukkit.getOnlinePlayers()) {
+        for (Player p : com.deruy.plugin.misc.Online.players()) {
             if (getTeam(p) == null) continue;
             Set<Material> seen = new HashSet<>();
             for (var item : p.getInventory().getContents())

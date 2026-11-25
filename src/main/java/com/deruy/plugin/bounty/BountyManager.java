@@ -102,7 +102,7 @@ public class BountyManager implements GameEvent {
 
     /** 랜덤 온라인 플레이어를 서버 전체가 쫓는 단일 타겟으로 지정 */
     public boolean setRandomGlobalTarget() {
-        var online = new java.util.ArrayList<>(Bukkit.getOnlinePlayers());
+        var online = new java.util.ArrayList<>(com.deruy.plugin.misc.Online.players());
         if (online.isEmpty()) return false;
 
         java.util.Collections.shuffle(online);

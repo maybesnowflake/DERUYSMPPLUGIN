@@ -104,7 +104,7 @@ public class CombatBossBarManager {
                 bar.setTitle(title);
                 bar.setProgress(progress);
 
-                for (Player player : Bukkit.getOnlinePlayers()) {
+                for (Player player : com.deruy.plugin.misc.Online.players()) {
                     if (!bar.getPlayers().contains(player)) {
                         bar.addPlayer(player);
                     }
@@ -136,7 +136,7 @@ public class CombatBossBarManager {
             entry.getValue().removeAll();
             return true;
         });
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : com.deruy.plugin.misc.Online.players()) {
             UUID uuid = player.getUniqueId();
             boolean combatTagged = plugin.getLifeStealManager().isCombatTagged(uuid);
 

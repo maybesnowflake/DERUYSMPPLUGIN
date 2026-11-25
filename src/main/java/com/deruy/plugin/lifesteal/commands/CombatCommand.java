@@ -57,7 +57,7 @@ public class CombatCommand implements CommandExecutor, TabCompleter {
         List<String> result = new ArrayList<>();
         if (args.length == 1) {
             StringUtil.copyPartialMatches(args[0],
-                    Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()), result);
+                    com.deruy.plugin.misc.Online.players().stream().map(Player::getName).collect(Collectors.toList()), result);
         } else if (args.length == 2) {
             StringUtil.copyPartialMatches(args[1], List.of("10", "15", "30", "60"), result);
         }

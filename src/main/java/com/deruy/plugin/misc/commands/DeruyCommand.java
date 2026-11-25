@@ -109,7 +109,7 @@ public final class DeruyCommand implements TabExecutor {
         if (a.length == 2 && a[0].equalsIgnoreCase("replay"))
             return List.of("status", "list", "save", "verify").stream().filter(x -> x.startsWith(a[1].toLowerCase(Locale.ROOT))).toList();
         if (a.length == 3 && a[0].equalsIgnoreCase("replay") && a[1].equalsIgnoreCase("save"))
-            return Bukkit.getOnlinePlayers().stream().map(org.bukkit.entity.Player::getName).toList();
+            return com.deruy.plugin.misc.Online.players().stream().map(org.bukkit.entity.Player::getName).toList();
         if (a.length == 3 && a[0].equalsIgnoreCase("replay") && a[1].equalsIgnoreCase("verify") && plugin.getReplayService() != null)
             return plugin.getReplayService().recent(20);
         if (a.length == 1) return List.of("status", "timeline", "replay").stream().filter(x -> x.startsWith(a[0].toLowerCase(Locale.ROOT))).toList();

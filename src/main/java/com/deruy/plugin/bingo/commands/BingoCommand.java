@@ -230,7 +230,7 @@ public class BingoCommand implements CommandExecutor, TabCompleter {
                     List.of("team", "start", "stop", "board", "boardlist", "excludeitem", "excludebiome"), result);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("team")) {
             StringUtil.copyPartialMatches(args[1],
-                    Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()), result);
+                    com.deruy.plugin.misc.Online.players().stream().map(Player::getName).collect(Collectors.toList()), result);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("excludeitem")) {
             StringUtil.copyPartialMatches(args[1],
                     java.util.Arrays.stream(org.bukkit.Material.values()).map(Enum::name).toList(), result);

@@ -68,7 +68,7 @@ public class LocatorBarManager implements GameEvent {
     }
 
     private void tick() {
-        for (Player viewer : Bukkit.getOnlinePlayers()) {
+        for (Player viewer : com.deruy.plugin.misc.Online.players()) {
             Player nearest = findNearestOtherPlayer(viewer);
             if (nearest == null) {
                 continue;
@@ -82,7 +82,7 @@ public class LocatorBarManager implements GameEvent {
         Player nearest = null;
         double bestDistSq = Double.MAX_VALUE;
         for (Player other : viewer.getWorld().getPlayers()) {
-            if (other.equals(viewer)) continue;
+            if (other.equals(viewer) || com.deruy.plugin.misc.Online.isFake(other)) continue; // 녹화 카메라 관전자
             double distSq = other.getLocation().distanceSquared(viewer.getLocation());
             if (distSq < bestDistSq) {
                 bestDistSq = distSq;

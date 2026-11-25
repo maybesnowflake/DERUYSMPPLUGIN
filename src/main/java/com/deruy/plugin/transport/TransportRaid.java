@@ -56,7 +56,7 @@ public final class TransportRaid implements Listener {
  public void move(Location at) {
   if(!active)return;double yaw=Math.toRadians(at.getYaw());for(int i=0;i<boxes.size();i++){double z=i==0?-1:1;Location p=at.clone().add(-Math.sin(yaw)*z,.18,Math.cos(yaw)*z);boxes.get(i).setFireTicks(0);if(!boxes.get(i).teleport(p))throw new IllegalStateException("공격 판정 이동 실패");}
   bar.setTitle(String.format(Locale.ROOT,"하트 열차 %.0f / %.0f",health,maxHealth));bar.setProgress(Math.clamp(health/maxHealth,0,1));
-  for(Player p:Bukkit.getOnlinePlayers()){if(p.getWorld().equals(at.getWorld())&&p.getLocation().distanceSquared(at)<64*64)bar.addPlayer(p);else bar.removePlayer(p);}
+  for(Player p:com.deruy.plugin.misc.Online.players()){if(p.getWorld().equals(at.getWorld())&&p.getLocation().distanceSquared(at)<64*64)bar.addPlayer(p);else bar.removePlayer(p);}
  }
  @EventHandler(priority=EventPriority.HIGHEST) public void blockInteraction(PlayerInteractEntityEvent e){if(!owns(e.getRightClicked().getUniqueId()))return;e.setCancelled(true);if(awaitingId!=null&&e.getHand()==org.bukkit.inventory.EquipmentSlot.HAND)rewards.claim(awaitingId,e.getPlayer());}
  @EventHandler(priority=EventPriority.HIGHEST) public void attack(EntityDamageEvent e) {

@@ -546,7 +546,7 @@ public class DeruyPlugin extends JavaPlugin {
         }
 
         if (rangeRaw.equals("00")) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
+            for (Player p : com.deruy.plugin.misc.Online.players()) {
                 p.playSound(loc, sound, volume, pitch);
             }
             return;

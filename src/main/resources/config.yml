@@ -634,6 +634,10 @@ replay:
     transport: true          # 하트 운송전 열차
     dragon: true             # 엔더 드래곤 (플레이어가 때리면 시작, 2분 조용하거나 죽으면 끝)
     radius: 48
+  camera-ear:                # 카메라 자리에 보이지 않는 관전자를 둬서 소리·파편·폭발을 받음 (근처에 사람이 없어도)
+    enabled: true            # 관전자는 탭 목록·접속 메시지·이 플러그인 기능에서 빠지고, 몹 스폰·잠자기에 영향 없음
+                             # 단, 서버 인원 수(/list)와 다른 플러그인에는 플레이어로 보일 수 있음
+    spectators-generate-chunks: false  # 관전자가 새 지형을 만들지 않게 월드 규칙 spectatorsGenerateChunks 를 이 값으로 (keep = 안 건드림)
   events:
     random-event: true       # 랜덤 이벤트 동안 전원
     transport: true          # 하트 운송전 동안 열차 근처

@@ -99,7 +99,7 @@ public class CombatZoneListener implements Listener {
 
     @EventHandler
     public void onTeleport(PlayerTeleportEvent event) {
-        if (event.getTo() == null) return;
+        if (event.getTo() == null || com.deruy.plugin.misc.Online.isFake(event.getPlayer())) return; // 녹화 카메라 관전자
         handleBlock(event.getPlayer(), event.getFrom(), event.getTo(), event);
     }
 }

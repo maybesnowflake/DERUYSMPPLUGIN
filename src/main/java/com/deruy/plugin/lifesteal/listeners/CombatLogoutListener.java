@@ -11,7 +11,7 @@ public final class CombatLogoutListener implements Listener {
     public CombatLogoutListener(DeruyPlugin plugin) { this.plugin = plugin; }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onQuit(PlayerQuitEvent event) {
-        var p = event.getPlayer(); var manager = plugin.getLifeStealManager();
+        var p = event.getPlayer(); if (com.deruy.plugin.misc.Online.isFake(p)) return; var manager = plugin.getLifeStealManager();
         try {
             if (plugin.getServer().isStopping() || !manager.isSystemEnabled() || p.isDead()
                     || !manager.isCombatTagged(p.getUniqueId())) return;

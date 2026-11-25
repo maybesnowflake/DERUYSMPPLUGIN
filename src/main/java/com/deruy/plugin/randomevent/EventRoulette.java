@@ -72,7 +72,7 @@ public final class EventRoulette {
 
     public void start() {
         // 기본 타이틀이 릴 가운데를 가리므로 지운다. 제목은 위쪽 텍스트 디스플레이로.
-        Bukkit.getOnlinePlayers().forEach(Player::resetTitle);
+        com.deruy.plugin.misc.Online.players().forEach(Player::resetTitle);
         task = Bukkit.getScheduler().runTaskTimer(plugin, this::frame, 1, 1);
     }
 
@@ -129,7 +129,7 @@ public final class EventRoulette {
             float pitch = (float) (0.9 + 0.8 * Math.min(1, tick / (double) spinTicks));
 
             Set<UUID> online = new HashSet<>();
-            for (Player p0 : Bukkit.getOnlinePlayers()) {
+            for (Player p0 : com.deruy.plugin.misc.Online.players()) {
                 online.add(p0.getUniqueId());
                 Viewer v = viewer(p0);
                 updateHeading(p0, v, revealing ? winner : at(center), revealing);
