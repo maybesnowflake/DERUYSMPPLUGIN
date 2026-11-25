@@ -68,7 +68,7 @@ public class LocatorBarManager implements GameEvent {
     }
 
     private void tick() {
-        for (Player viewer : Bukkit.getOnlinePlayers()) {
+        for (Player viewer : com.deruy.plugin.misc.Online.players()) {
             Player nearest = findNearestOtherPlayer(viewer);
             if (nearest == null) {
                 continue;

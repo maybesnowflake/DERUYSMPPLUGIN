@@ -7,7 +7,9 @@ import com.deruy.plugin.replay.buffer.Segment;
 import com.deruy.plugin.replay.format.ReplayArchive;
 import com.deruy.plugin.replay.format.ReplayVerifier;
 import com.deruy.plugin.replay.nms.Codecs;
+import com.deruy.plugin.replay.nms.CameraEar;
 import com.deruy.plugin.replay.nms.CameraRecorder;
+import com.deruy.plugin.misc.Online;
 import com.deruy.plugin.replay.nms.PlayerRecorder;
 import com.deruy.plugin.replay.nms.SoundShare;
 import com.deruy.plugin.replay.buffer.Recorder;
@@ -62,6 +64,10 @@ public final class ReplayService implements Listener {
     private final ChunkStore store = new ChunkStore();
     private final String configBlob;
     private final Map<UUID, PlayerRecorder> recorders = new HashMap<>();
+    /** 카메라 자리의 보이지 않는 관전자 (카메라 키 → 관전자). 소리를 받으려고 둔다 */
+    private final Map<String, CameraEar> ears = new HashMap<>();
+    private boolean earEnabled;
+    private String earSpectatorRule;
     /** 지금 돌고 있는 카메라(고정·추적), 이름 → 녹화기 */
     private final Map<String, CameraRecorder> cameras = new LinkedHashMap<>();
     private final Map<String, CameraDef> cameraDefs = new LinkedHashMap<>();
@@ -108,6 +114,8 @@ public final class ReplayService implements Listener {
         killcamBefore = Math.max(1, c.getInt("killcam.before-seconds", 15)) * 20;
         killcamAfter = Math.max(0, c.getInt("killcam.after-seconds", 3)) * 20;
         edlFps = Math.max(1, c.getInt("edl-fps", 60));
+        earEnabled = c.getBoolean("camera-ear.enabled", true);
+        earSpectatorRule = c.getString("camera-ear.spectators-generate-chunks", "false").toLowerCase(Locale.ROOT);
         folder = plugin.getDataFolder().toPath().resolve(c.getString("folder", "replays"));
         var server = ((CraftServer) Bukkit.getServer()).getServer();
         codecs = new Codecs(server);
@@ -117,7 +125,7 @@ public final class ReplayService implements Listener {
     public void start() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
         task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
-        for (Player p : Bukkit.getOnlinePlayers()) attach(p);
+        for (Player p : com.deruy.plugin.misc.Online.players()) attach(p);
         loadCameras();
         plugin.getLogger().info("서버 녹화 켜짐: 접속자 되감기 " + preRollTicks / 20 + "초, 구간 " + segmentTicks / 20 + "초 → " + folder);
     }
@@ -138,6 +146,7 @@ public final class ReplayService implements Listener {
         all.forEach(Recorder::release);
         recorders.clear();
         cameras.clear();
+        removeEars();
         List.copyOf(held.keySet()).forEach(this::releaseChunks);
     }
 
@@ -168,6 +177,7 @@ public final class ReplayService implements Listener {
         }
         tickAll(recorders.values().iterator(), "퇴장");
         tickAll(cameras.values().iterator(), "끝");
+        syncEars();
         if (tick % 20 == 0) {
             eventTick();
             combatTagTick();
@@ -215,6 +225,66 @@ public final class ReplayService implements Listener {
         for (Recorder r : allRecorders()) n += r.buffer().memoryBytes();
         return n;
     }
+
+    // ------------------------------------------------------------------ 카메라 관전자 (소리)
+
+    /** 돌고 있는 카메라마다 관전자 하나: 없으면 놓고, 카메라가 움직이면 따라가고, 카메라가 멈추면 뺀다. 받은 소리는 다음 틱에 나눔 */
+    private void syncEars() {
+        if (!ears.isEmpty()) {
+            var it = ears.entrySet().iterator();
+            while (it.hasNext()) {
+                var en = it.next();
+                CameraRecorder cam = cameras.get(en.getKey());
+                if (cam == null || !cam.alive() || !en.getValue().alive()) { removeEar(en.getValue()); it.remove(); }
+            }
+        }
+        if (!earEnabled) return;
+        for (CameraRecorder cam : cameras.values()) {
+            if (!cam.alive()) continue;
+            Location at = cam.where();
+            CameraEar ear = ears.get(cam.name());
+            if (at == null || at.getWorld() == null) continue;
+            if (ear == null) {
+                applySpectatorRule(at.getWorld());
+                try { ear = CameraEar.spawn(plugin, cam.name(), at, codecs, (int) Math.ceil(cam.radius() / 16.0) + 1); }
+                catch (RuntimeException | LinkageError e) {
+                    earEnabled = false; // 한 번 실패하면 이번 실행에선 더 시도하지 않는다 (소리 공유는 계속)
+                    plugin.getLogger().warning("서버 녹화: 카메라 관전자를 놓지 못해 끕니다 — " + e);
+                    return;
+                }
+                ears.put(cam.name(), ear);
+            } else {
+                try { ear.moveTo(at); } catch (RuntimeException ignored) { }
+            }
+        }
+        for (CameraEar ear : ears.values())
+            try { ear.drain(s -> { if (soundsNow.size() < 20000) soundsNow.add(s); }); } catch (RuntimeException | LinkageError ignored) { }
+    }
+
+    private final Set<UUID> ruledWorlds = new HashSet<>();
+
+    /** 설정대로 관전자가 새 지형을 만들지 않게 (월드 게임 규칙, 월드마다 한 번) */
+    private void applySpectatorRule(org.bukkit.World w) {
+        if (earSpectatorRule.equals("keep") || !ruledWorlds.add(w.getUID())) return;
+        boolean v = Boolean.parseBoolean(earSpectatorRule);
+        try {
+            if (!Objects.equals(w.getGameRuleValue(org.bukkit.GameRule.SPECTATORS_GENERATE_CHUNKS), v)) {
+                w.setGameRule(org.bukkit.GameRule.SPECTATORS_GENERATE_CHUNKS, v);
+                plugin.getLogger().info("서버 녹화: " + w.getName() + " 게임 규칙 spectatorsGenerateChunks=" + v + " (카메라 관전자)");
+            }
+        } catch (RuntimeException e) { plugin.getLogger().warning("서버 녹화: 관전자 지형 생성 규칙을 바꾸지 못함 — " + e); }
+    }
+
+    private void removeEar(CameraEar ear) {
+        try { ear.remove(); } catch (RuntimeException | LinkageError e) { plugin.getLogger().warning("서버 녹화: 카메라 관전자 정리 실패 — " + e); }
+    }
+
+    private void removeEars() {
+        ears.values().forEach(this::removeEar);
+        ears.clear();
+    }
+
+    public int earCount() { return ears.size(); }
 
     // ------------------------------------------------------------------ 하이라이트 걸기
 
@@ -641,7 +711,7 @@ public final class ReplayService implements Listener {
                     saved++;
                     lastSaved = rel;
                     String msg = "§d[서버 녹화] §f" + rel + " §7(" + written / 20 + "초, " + size / 1024 / 1024 + "MB)";
-                    Bukkit.getOnlinePlayers().stream().filter(p -> p.hasPermission("deruy.admin")).forEach(p -> p.sendMessage(msg));
+                    com.deruy.plugin.misc.Online.players().stream().filter(p -> p.hasPermission("deruy.admin")).forEach(p -> p.sendMessage(msg));
                     com.deruy.plugin.timeline.Timeline.log(plugin, "REPLAY_SAVED", player, rel, null);
                 }); } catch (org.bukkit.plugin.IllegalPluginAccessException ignored) { } // 그 사이 꺼짐
             } catch (Exception e) {
@@ -758,8 +828,28 @@ public final class ReplayService implements Listener {
 
     // ------------------------------------------------------------------ 접속·퇴장·팔 휘두르기
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onJoinEarly(PlayerJoinEvent e) {
+        if (Online.isFake(e.getPlayer())) { e.joinMessage(null); return; }
+        for (CameraEar ear : ears.values()) ear.hideFrom(plugin, e.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onFakeJoinMessage(PlayerJoinEvent e) { if (Online.isFake(e.getPlayer())) e.joinMessage(null); }
+
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent e) { attach(e.getPlayer()); }
+    public void onJoin(PlayerJoinEvent e) { if (!Online.isFake(e.getPlayer())) attach(e.getPlayer()); }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onFakeQuitMessage(PlayerQuitEvent e) { if (Online.isFake(e.getPlayer())) e.quitMessage(null); }
+
+    /** 서버 목록 인원·이름 표본에서 관전자 빼기 */
+    @EventHandler
+    public void onPing(com.destroystokyo.paper.event.server.PaperServerListPingEvent e) {
+        if (ears.isEmpty()) return;
+        e.getListedPlayers().removeIf(i -> Online.isFake(i.id()));
+        e.setNumPlayers(Math.max(0, e.getNumPlayers() - ears.size()));
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {

@@ -73,7 +73,7 @@ public class VoucherCommand implements CommandExecutor, TabCompleter {
             StringUtil.copyPartialMatches(args[0], List.of("give"), result);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
             StringUtil.copyPartialMatches(args[1],
-                    Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), result);
+                    com.deruy.plugin.misc.Online.players().stream().map(Player::getName).toList(), result);
         } else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
             StringUtil.copyPartialMatches(args[2], List.of("1", "2"), result);
         } else if (args.length == 4 && args[0].equalsIgnoreCase("give")) {

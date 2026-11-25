@@ -62,7 +62,7 @@ public class CombatZoneVisualizer {
         int radius = plugin.getConfig().getInt("combat-zone.visualize-radius", 8);
         List<String> protectedNames = plugin.getConfig().getStringList("combat-zone.protected-regions");
 
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : com.deruy.plugin.misc.Online.players()) {
             UUID uuid = player.getUniqueId();
             Set<Location> previous = shownFakeBlocks.getOrDefault(uuid, Set.of());
 

@@ -125,7 +125,7 @@ public class RoleEffectScheduler {
         }
 
         int applied = 0;
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : com.deruy.plugin.misc.Online.players()) {
             if (!plugin.hasRole(player, role)) continue;
             player.addPotionEffect(new PotionEffect(type, durationSeconds * 20, amplifier));
             player.sendMessage("§d[역할이펙트] §e" + effectName + " 효과를 받았습니다.");

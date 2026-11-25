@@ -8,7 +8,7 @@ public final class HeartRestoreListener implements Listener {
     private final DeruyPlugin plugin;
     public HeartRestoreListener(DeruyPlugin plugin) { this.plugin = plugin; }
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent e) { plugin.getServer().getScheduler().runTask(plugin, () -> apply(plugin, e.getPlayer())); }
+    public void onJoin(PlayerJoinEvent e) { if (com.deruy.plugin.misc.Online.isFake(e.getPlayer())) return; plugin.getServer().getScheduler().runTask(plugin, () -> apply(plugin, e.getPlayer())); }
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent e) { plugin.getServer().getScheduler().runTask(plugin, () -> apply(plugin, e.getPlayer())); }
     public static void apply(DeruyPlugin plugin, Player player) {

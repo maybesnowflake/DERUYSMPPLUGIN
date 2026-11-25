@@ -16,7 +16,7 @@ public class RolePvpListener implements Listener {
     private final java.util.Map<java.util.UUID, Long> lastNotice = new java.util.HashMap<>();
 
     @EventHandler
-    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) { lastNotice.remove(event.getPlayer().getUniqueId()); }
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) { if (com.deruy.plugin.misc.Online.isFake(event.getPlayer())) return; lastNotice.remove(event.getPlayer().getUniqueId()); }
 
     public RolePvpListener(DeruyPlugin plugin) {
         this.plugin = plugin;

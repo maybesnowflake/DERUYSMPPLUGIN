@@ -40,7 +40,7 @@ import java.util.function.Supplier;
  * 플레이어 없이 한 지점(고정 카메라) 또는 움직이는 대상(추적 카메라)을 녹화하는 가상 시청자.
  * 패킷을 받아 적을 연결이 없으므로 서버 상태를 매 틱 직접 읽어 Flashback 액션으로 만든다:
  * 반경 안 엔티티 출입·위치·데이터·장비, 피격·사망·팔 휘두르기, 블록 변화(청크는 스냅샷마다 다시).
- * 소리는 들어가지 않는다(서버가 실제 플레이어에게만 보냄).
+ * 소리·파편·폭발은 근처 녹화 중인 플레이어와 카메라 자리의 보이지 않는 관전자(CameraEar)가 받은 것을 나눠 받는다.
  */
 public final class CameraRecorder implements Recorder {
     private record Pos(double x, double y, double z, float yaw, float pitch, float head, boolean onGround) {}
@@ -106,6 +106,9 @@ public final class CameraRecorder implements Recorder {
     }
 
     @Override public String name() { return name; }
+    /** 지금 카메라가 보는 자리 (추적 카메라면 대상 위치, 대상이 없으면 null) */
+    public Location where() { return where.get(); }
+    public double radius() { return radius; }
     @Override public PlayerBuffer buffer() { return buffer; }
     @Override public boolean alive() { return stoppedReason == null; }
     @Override public String stoppedReason() { return stoppedReason; }

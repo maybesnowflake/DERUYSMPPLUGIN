@@ -121,7 +121,7 @@ public class BountyCommand implements CommandExecutor, TabCompleter {
             return List.of("status").stream().filter(v -> v.startsWith(args[0].toLowerCase(java.util.Locale.ROOT))).toList();
         }
         List<String> result = new ArrayList<>();
-        List<String> playerNames = Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
+        List<String> playerNames = com.deruy.plugin.misc.Online.players().stream().map(Player::getName).collect(Collectors.toList());
 
         if (args.length == 1) {
             StringUtil.copyPartialMatches(args[0], List.of("status", "sides", "clearsides", "pair", "unpair", "random", "cleartarget", "start", "stop"), result);
