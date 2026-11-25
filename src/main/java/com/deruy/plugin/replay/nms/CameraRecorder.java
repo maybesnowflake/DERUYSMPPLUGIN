@@ -372,8 +372,10 @@ public final class CameraRecorder implements Recorder {
         game(out, new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, level.getRainLevel(1f)));
         game(out, new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, level.getThunderLevel(1f)));
 
-        // 청크: 범위 안을 전부 지금 상태로 (바뀐 블록도 여기서 반영됨)
-        for (String h : chunks.values()) store.release(h);
+        // 청크: 범위 안을 전부 지금 상태로. 직전 구간에 아직 안 보낸 변화(이벤트 없는 변경)는 그 구간 끝 액션으로 남긴다
+        Segment prevSeg = buffer.current();
+        boolean prevOpen = prevSeg != null && !prevSeg.closed() && !needSnapshot;
+        Map<Long, String> prev = new HashMap<>(chunks);
         chunks.clear();
         changedBlocks.clear();
         int cx = at.getBlockX() >> 4, cz = at.getBlockZ() >> 4;
@@ -381,9 +383,12 @@ public final class CameraRecorder implements Recorder {
             for (int z = cz - chunkRadius; z <= cz + chunkRadius; z++) {
                 String h = chunk(x, z);
                 if (h == null) continue;
+                String before = prev.get(ChunkPos.asLong(x, z));
+                if (prevOpen && before != null && !before.equals(h)) prevSeg.chunkRef(h);
                 FlashbackFormat.action(out, FlashbackFormat.ID_CHUNK_REF, HexFormat.of().parseHex(h));
                 refs.add(h);
             }
+        for (String h : prev.values()) store.release(h);
 
         // 엔티티: 지금 범위 안
         seen.clear();
