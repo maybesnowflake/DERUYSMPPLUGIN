@@ -432,8 +432,9 @@ public final class ReplayService implements Listener {
             cam.buffer().highlight(cam.buffer().labels().iterator().next(), tick, tick + tailTicks, new PlayerBuffer.Marker(tick, 0x33AAFF, "끝", null, 0, 0, 0));
     }
 
-    /** 고정 카메라 범위 청크를 불러와 붙잡아 둔다(카메라가 멈추면 놓음) */
+    /** 고정 카메라 범위 청크를 불러와 붙잡아 둔다. 여러 카메라가 같은 청크를 보면 마지막 카메라가 멈출 때만 놓는다 */
     private final Map<String, List<org.bukkit.Chunk>> held = new HashMap<>();
+    private final Map<org.bukkit.Chunk, Integer> heldCount = new HashMap<>();
 
     private void holdChunks(String key, Location at, double radius) {
         if (at == null || at.getWorld() == null) return;
@@ -443,14 +444,18 @@ public final class ReplayService implements Listener {
         for (int x = cx - r; x <= cx + r; x++) for (int z = cz - r; z <= cz + r; z++)
             at.getWorld().getChunkAtAsync(x, z).thenAccept(c -> {
                 if (held.get(key) != list) return; // 그 사이 멈춤
-                c.addPluginChunkTicket(plugin);
+                if (heldCount.merge(c, 1, Integer::sum) == 1) c.addPluginChunkTicket(plugin);
                 list.add(c);
             });
     }
 
     private void releaseChunks(String key) {
         List<org.bukkit.Chunk> list = held.remove(key);
-        if (list != null) for (var c : list) c.removePluginChunkTicket(plugin);
+        if (list == null) return;
+        for (var c : list) {
+            Integer n = heldCount.merge(c, -1, Integer::sum);
+            if (n == null || n <= 0) { heldCount.remove(c); c.removePluginChunkTicket(plugin); }
+        }
     }
 
     /** 정의를 바꾸면 돌고 있던 녹화기는 지금까지를 저장하고 새로 시작 */
