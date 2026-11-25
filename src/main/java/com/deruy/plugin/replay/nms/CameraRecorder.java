@@ -142,9 +142,10 @@ public final class CameraRecorder implements Recorder {
         ServerLevel lvl = ((CraftWorld) at.getWorld()).getHandle();
         if (lvl != level) { level = lvl; needSnapshot = true; }
         Segment seg = buffer.current();
-        if (needSnapshot || seg == null || seg.ticks() >= segmentTicks) { startSegment(now, at); seg = buffer.current(); }
-        else update(seg, at);
+        if (needSnapshot || seg == null) { startSegment(now, at); seg = buffer.current(); }
+        else update(seg, at); // 구간이 바뀌기 직전 틱의 변화도 이 구간 액션으로 남긴다(연속 재생용)
         seg.nextTick();
+        if (seg.ticks() >= segmentTicks) startSegment(now + 1, at); // 다음 구간은 지금 상태 그대로의 스냅샷으로(탐색용)
         return finishIfDue(now);
     }
 
@@ -152,8 +153,11 @@ public final class CameraRecorder implements Recorder {
         List<PlayerBuffer.Clip> clips = new ArrayList<>(1);
         if (buffer.current() != null && buffer.exportDue(now + 1)) {
             Location at = where.get();
-            if (at != null && at.getWorld() != null && level != null) startSegment(now + 1, at);
-            else buffer.current().close();
+            Segment cur = buffer.current();
+            boolean justRolled = cur.startTick == now + 1 && cur.ticks() == 0;
+            if (justRolled) { /* 방금 새 구간을 열었음 */ }
+            else if (at != null && at.getWorld() != null && level != null) startSegment(now + 1, at);
+            else cur.close();
             PlayerBuffer.Clip c = buffer.takeClip(now + 1);
             if (c != null) clips.add(c);
         }
