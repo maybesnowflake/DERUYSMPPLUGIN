@@ -317,7 +317,7 @@ public final class ReplayService implements Listener {
         // 파일 이름은 영문만(서버 OS 문자 설정에 따라 한글 경로가 깨질 수 있음). 한글 이름은 리플레이 제목에 들어간다
         String file = FILE_TIME.format(now) + "_" + clip.labels().stream().map(ReplayService::tag).distinct().reduce((a, b) -> a + "+" + b).orElse("clip")
                 + "_" + safe(player) + (clip.continued() ? "_cont" : "") + ".zip";
-        Path out = folder.resolve(DAY.format(now)).resolve(file);
+        Path dir = folder.resolve(DAY.format(now));
         String name = labels + " - " + player + " - " + now.format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) + (clip.continued() ? " (이어서)" : "");
         List<ReplayArchive.Marker> markers = new ArrayList<>();
         for (PlayerBuffer.Marker m : clip.markers())
@@ -325,6 +325,7 @@ public final class ReplayService implements Listener {
         // 구간 바이트는 저장 스레드에서 꺼낸다 (닫힌 구간은 바뀌지 않음)
         io.execute(() -> {
             try {
+                Path out = unique(dir, file); // 같은 초·같은 사람 저장이 겹쳐도 덮어쓰지 않게 (저장 스레드 하나라 경쟁 없음)
                 List<ReplayArchive.Part> parts = new ArrayList<>();
                 for (Segment s : clip.segments()) parts.add(new ReplayArchive.Part(s.snapshot(), s.actionsCopy(), s.ticks()));
                 int written = ReplayArchive.write(out, new ReplayArchive.Meta(UUID.randomUUID(), name, Bukkit.getMotd(),
@@ -347,6 +348,13 @@ public final class ReplayService implements Listener {
                 clip.done();
             }
         });
+    }
+
+    public static Path unique(Path dir, String file) {
+        Path p = dir.resolve(file);
+        String base = file.substring(0, file.length() - 4);
+        for (int i = 2; Files.exists(p) || Files.exists(p.resolveSibling(p.getFileName() + ".part")); i++) p = dir.resolve(base + "_" + i + ".zip");
+        return p;
     }
 
     private static String safe(String s) { String t = s.replaceAll("[^0-9A-Za-z_-]", ""); return t.isEmpty() ? "player" : t; }

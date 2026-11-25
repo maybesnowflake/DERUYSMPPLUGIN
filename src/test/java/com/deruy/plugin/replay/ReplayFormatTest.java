@@ -184,4 +184,12 @@ class ReplayFormatTest {
         assertEquals(8 * ((1 << 20) + 5 + FbOut.varIntSize(FlashbackFormat.ID_GAME_PACKET) - 1), s.actionsCopy().length, "내용은 그대로");
         s.release(); store.release(h);
     }
+
+    @Test void sameSecondSavesDoNotOverwrite() throws Exception {
+        java.nio.file.Files.writeString(dir.resolve("120000_manual_P.zip"), "a");
+        var second = com.deruy.plugin.replay.ReplayService.unique(dir, "120000_manual_P.zip");
+        assertEquals("120000_manual_P_2.zip", second.getFileName().toString());
+        java.nio.file.Files.writeString(second, "b");
+        assertEquals("120000_manual_P_3.zip", com.deruy.plugin.replay.ReplayService.unique(dir, "120000_manual_P.zip").getFileName().toString());
+    }
 }
