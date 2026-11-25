@@ -58,6 +58,8 @@ public final class PlayerBuffer {
             window.end = until;
         } else {
             window.end = Math.max(window.end, until);
+            // 이벤트(30초 전)에 PvP(60초 전)가 합쳐지면 더 이른 시작점으로. 이미 나눠 저장한 뒤라면 겹치지 않게 그대로
+            if (!window.continued) window.start = Math.min(window.start, Math.max(from, oldestTick()));
         }
         window.labels.add(label);
         if (marker != null) window.markers.add(marker);
@@ -107,7 +109,8 @@ public final class PlayerBuffer {
 
     /** 오래된 구간 버리기: 하이라이트 중이면 그 시작점이 든 구간부터, 아니면 최근 preRoll 이 든 구간부터 남긴다 */
     public void purge(long now) {
-        long keepFrom = window != null ? window.start : now - preRollTicks;
+        // 녹화 중이어도 기본 되감기 분량은 남겨 둔다 (곧 PvP 가 더 이른 시작점을 요청할 수 있음)
+        long keepFrom = window != null ? Math.min(window.start, now - preRollTicks) : now - preRollTicks;
         while (segments.size() > 1) {
             Iterator<Segment> it = segments.iterator();
             it.next();

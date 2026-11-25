@@ -192,4 +192,20 @@ class ReplayFormatTest {
         java.nio.file.Files.writeString(second, "b");
         assertEquals("120000_manual_P_3.zip", com.deruy.plugin.replay.ReplayService.unique(dir, "120000_manual_P.zip").getFileName().toString());
     }
+
+    @Test void pvpDuringEventPullsStartEarlier() {
+        ChunkStore store = new ChunkStore();
+        String h = store.put(packet(39, 50));
+        PlayerBuffer buf = new PlayerBuffer(1200, 20 * 60 * 15);
+        long now = 0;
+        for (int i = 0; i < 6; i++) { buf.startSegment(seg(store, now, h, 600)); now += 600; buf.purge(now); } // 3600
+        buf.highlight("event", now - 600, now + 2000, null);          // 이벤트: 30초 전(3000)부터
+        for (int i = 0; i < 2; i++) { buf.startSegment(seg(store, now, h, 300)); now += 300; buf.purge(now); } // 4200
+        buf.highlight("PvP", now - 1200, now + 300, null);            // PvP: 60초 전(3000)… 더 이른 건 아님
+        assertEquals(3000, buf.windowStart());
+        buf.highlight("PvP", 2500, now + 300, null);                  // 더 이른 요청은 반영 (버퍼에 있으면)
+        assertTrue(buf.windowStart() <= 3000 && buf.windowStart() >= 2400, "시작점: " + buf.windowStart());
+        assertTrue(buf.segments().stream().anyMatch(s -> s.startTick <= buf.windowStart()), "그 장면을 가진 구간이 남아 있음");
+        buf.clear(); store.release(h);
+    }
 }
