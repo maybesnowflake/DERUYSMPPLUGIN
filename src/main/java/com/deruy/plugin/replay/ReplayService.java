@@ -434,7 +434,6 @@ public final class ReplayService implements Listener {
 
     /** 고정 카메라 범위 청크를 불러와 붙잡아 둔다. 여러 카메라가 같은 청크를 보면 마지막 카메라가 멈출 때만 놓는다 */
     private final Map<String, List<org.bukkit.Chunk>> held = new HashMap<>();
-    private final Map<org.bukkit.Chunk, Integer> heldCount = new HashMap<>();
 
     private void holdChunks(String key, Location at, double radius) {
         if (at == null || at.getWorld() == null) return;
@@ -444,7 +443,7 @@ public final class ReplayService implements Listener {
         for (int x = cx - r; x <= cx + r; x++) for (int z = cz - r; z <= cz + r; z++)
             at.getWorld().getChunkAtAsync(x, z).thenAccept(c -> {
                 if (held.get(key) != list) return; // 그 사이 멈춤
-                if (heldCount.merge(c, 1, Integer::sum) == 1) c.addPluginChunkTicket(plugin);
+                plugin.getChunkHolds().hold(c); // 운송 열차 등 다른 기능과 공유
                 list.add(c);
             });
     }
@@ -452,10 +451,7 @@ public final class ReplayService implements Listener {
     private void releaseChunks(String key) {
         List<org.bukkit.Chunk> list = held.remove(key);
         if (list == null) return;
-        for (var c : list) {
-            Integer n = heldCount.merge(c, -1, Integer::sum);
-            if (n == null || n <= 0) { heldCount.remove(c); c.removePluginChunkTicket(plugin); }
-        }
+        for (var c : list) plugin.getChunkHolds().release(c);
     }
 
     /** 정의를 바꾸면 돌고 있던 녹화기는 지금까지를 저장하고 새로 시작 */
@@ -564,8 +560,9 @@ public final class ReplayService implements Listener {
         list.add(e.getBlock().getRelative(e.getDirection().getOppositeFace()));
         blocks(list.toArray(org.bukkit.block.Block[]::new));
     }
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true) public void onInteract(org.bukkit.event.player.PlayerInteractEvent e) {
-        if (e.getClickedBlock() != null) Bukkit.getScheduler().runTask(plugin, () -> blocks(e.getClickedBlock())); // 문·레버·버튼 등은 다음 틱 상태로
+    /** 취소된 상호작용이어도(보급 상자 수령처럼 다른 기능이 직접 블록을 바꾸는 경우) 다음 틱 실제 상태를 기록 */
+    @EventHandler(priority = EventPriority.MONITOR) public void onInteract(org.bukkit.event.player.PlayerInteractEvent e) {
+        if (e.getClickedBlock() != null && !cameras.isEmpty()) Bukkit.getScheduler().runTask(plugin, () -> blocks(e.getClickedBlock())); // 문·레버·버튼 등
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
