@@ -256,7 +256,7 @@ class ReplayFormatTest {
 
     @Test void sharedSoundsDedupeAndRange() {
         byte[] a = packet(110, 30), b = packet(110, 30), c = packet(110, 31);
-        var sa = new com.deruy.plugin.replay.nms.SoundShare("minecraft:overworld", 0, 64, 0, a, com.deruy.plugin.replay.nms.SoundShare.hash(a));
+        var sa = new com.deruy.plugin.replay.nms.SoundShare("minecraft:overworld", 0, 64, 0, a, com.deruy.plugin.replay.nms.SoundShare.hash(a), com.deruy.plugin.replay.nms.SoundShare.NO_POS);
         assertEquals(sa.hash(), com.deruy.plugin.replay.nms.SoundShare.hash(b), "같은 방송은 같은 해시");
         assertNotEquals(sa.hash(), com.deruy.plugin.replay.nms.SoundShare.hash(c));
         assertTrue(sa.near("minecraft:overworld", 20, 64, 20, 32));
