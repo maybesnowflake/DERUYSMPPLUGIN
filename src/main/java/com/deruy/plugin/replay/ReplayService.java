@@ -137,6 +137,7 @@ public final class ReplayService implements Listener {
         all.forEach(Recorder::release);
         recorders.clear();
         cameras.clear();
+        List.copyOf(held.keySet()).forEach(this::releaseChunks);
     }
 
     // ------------------------------------------------------------------ 녹화기
@@ -175,6 +176,7 @@ public final class ReplayService implements Listener {
             if (!r.alive()) {
                 if (!normalStop.equals(r.stoppedReason())) plugin.getLogger().warning("서버 녹화: " + r.name() + " 중단 — " + r.stoppedReason());
                 it.remove();
+                if (r instanceof CameraRecorder) { releaseChunks(r.name()); cameraUntil.remove(r.name()); }
                 io.execute(r::release);
             }
         }
@@ -402,6 +404,7 @@ public final class ReplayService implements Listener {
                 return false;
             }
             cameras.put(key, cam);
+            if (!follow) holdChunks(key, where.get(), radius); // 사람이 없어도 지형이 불러와져 있도록
             cam.tick(tick); // 첫 스냅샷
             cam.buffer().highlight(label, tick, tick + 40 + tailTicks, new PlayerBuffer.Marker(tick, 0x33AAFF, label + " 시작", null, 0, 0, 0));
         }
@@ -416,6 +419,27 @@ public final class ReplayService implements Listener {
         CameraRecorder cam = cameras.get(key);
         if (cam != null && cam.buffer().recording())
             cam.buffer().highlight(cam.buffer().labels().iterator().next(), tick, tick + tailTicks, new PlayerBuffer.Marker(tick, 0x33AAFF, "끝", null, 0, 0, 0));
+    }
+
+    /** 고정 카메라 범위 청크를 불러와 붙잡아 둔다(카메라가 멈추면 놓음) */
+    private final Map<String, List<org.bukkit.Chunk>> held = new HashMap<>();
+
+    private void holdChunks(String key, Location at, double radius) {
+        if (at == null || at.getWorld() == null) return;
+        int r = (int) Math.ceil(radius / 16.0) + 1, cx = at.getBlockX() >> 4, cz = at.getBlockZ() >> 4;
+        List<org.bukkit.Chunk> list = new ArrayList<>();
+        held.put(key, list);
+        for (int x = cx - r; x <= cx + r; x++) for (int z = cz - r; z <= cz + r; z++)
+            at.getWorld().getChunkAtAsync(x, z).thenAccept(c -> {
+                if (held.get(key) != list) return; // 그 사이 멈춤
+                c.addPluginChunkTicket(plugin);
+                list.add(c);
+            });
+    }
+
+    private void releaseChunks(String key) {
+        List<org.bukkit.Chunk> list = held.remove(key);
+        if (list != null) for (var c : list) c.removePluginChunkTicket(plugin);
     }
 
     private void loadCameras() {
