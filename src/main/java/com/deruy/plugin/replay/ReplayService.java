@@ -515,8 +515,9 @@ public final class ReplayService implements Listener {
     public boolean testCamera(String name, int seconds) {
         CameraDef d = cameraDefs.get(name);
         if (d == null) return false;
-        boolean ok = startCamera("cam-" + d.name(), "카메라 시험 " + d.name(), () -> d.at().clone(), d.radius(), false, seconds * 20L);
-        if (ok) Bukkit.getScheduler().runTaskLater(plugin, () -> endCamera("cam-" + d.name()), seconds * 20L);
+        // 시험은 별도 녹화기(test-이름) — 돌고 있는 상시·이벤트 녹화의 기한을 건드리지 않는다
+        boolean ok = startCamera("test-" + d.name(), "카메라 시험 " + d.name(), () -> d.at().clone(), d.radius(), false, seconds * 20L);
+        if (ok) Bukkit.getScheduler().runTaskLater(plugin, () -> endCamera("test-" + d.name()), seconds * 20L);
         return ok;
     }
 
