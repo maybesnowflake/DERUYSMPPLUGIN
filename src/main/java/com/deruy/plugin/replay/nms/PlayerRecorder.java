@@ -73,6 +73,9 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
     private java.util.function.Consumer<SoundShare> soundOut = s -> { };
     /** 최근 3틱 동안 받은 소리 해시 — 빌려 온 소리와 겹치지 않게 */
     private final ArrayDeque<it.unimi.dsi.fastutil.longs.LongOpenHashSet> heard = new ArrayDeque<>();
+    /** 다른 사람에게서 빌려 기록한 소리 해시 (최근 3틱) */
+    private final ArrayDeque<it.unimi.dsi.fastutil.longs.LongOpenHashSet> injected = new ArrayDeque<>();
+    private final List<SoundShare> sharedIn = new ArrayList<>();
     private static final double HEAR = 32;
     private String stoppedReason;
 
@@ -100,17 +103,29 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
 
     public void soundOut(java.util.function.Consumer<SoundShare> out) { this.soundOut = out; }
 
-    /** 근처 다른 사람이 받은 소리 중 이 사람은 못 받은 것(본인 발소리 등)을 넣는다. tick() 전에 호출 */
+    /** 근처 다른 사람이 받은 소리 중 이 사람은 못 받은 것(본인 발소리 등)을 모아 둔다. tick() 전에 호출.
+     *  실제 기록은 tick() 에서 이 사람 큐를 먼저 비운 뒤에 한다 (같은 방송이 이 사람 큐에 늦게 들어와 있으면 둘 다 적히므로). */
     public void injectSounds(List<SoundShare> shared) {
         Segment seg = buffer.current();
         if (shared.isEmpty() || seg == null || seg.closed() || needSnapshot || stoppedReason != null) return;
         String dim = handle.level().dimension().identifier().toString();
-        if (heard.isEmpty()) heard.addLast(new it.unimi.dsi.fastutil.longs.LongOpenHashSet());
-        for (SoundShare s : shared) {
-            if (!s.near(dim, handle.getX(), handle.getY(), handle.getZ(), HEAR) || heardRecently(s.hash())) continue;
+        for (SoundShare s : shared)
+            if (s.near(dim, handle.getX(), handle.getY(), handle.getZ(), HEAR)) sharedIn.add(s);
+    }
+
+    /** 큐를 비운 뒤: 이 사람이 최근 직접 받지 않은 것만 기록 */
+    private void flushShared(Segment seg) {
+        for (SoundShare s : sharedIn) {
+            if (heardRecently(s.hash()) || !injected.peekLast().add(s.hash())) continue;
             seg.action(FlashbackFormat.ID_GAME_PACKET, s.bytes());
-            heard.peekLast().add(s.hash());
         }
+        sharedIn.clear();
+    }
+
+    /** 빌려 넣은 것이 나중에 이 사람에게도 직접 도착하면 원본은 한 번 건너뛴다 */
+    private boolean injectedRecently(long h) {
+        for (var set : injected) if (set.remove(h)) return true;
+        return false;
     }
 
     private boolean heardRecently(long h) {
@@ -124,12 +139,14 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
     @Override public List<PlayerBuffer.Clip> tick(long now) {
         if (stoppedReason != null) return List.of();
         if (!tap.active()) { stop("패킷 수집 중단: " + tap.failure()); return List.of(); }
-        if (tap.configuring()) { drainDiscard(); needSnapshot = true; return List.of(); }
+        if (tap.configuring()) { drainDiscard(); sharedIn.clear(); needSnapshot = true; return List.of(); }
 
         heard.addLast(new it.unimi.dsi.fastutil.longs.LongOpenHashSet());
         while (heard.size() > 3) heard.removeFirst();
+        injected.addLast(new it.unimi.dsi.fastutil.longs.LongOpenHashSet());
+        while (injected.size() > 3) injected.removeFirst();
         Segment seg = buffer.current();
-        if (seg != null && !needSnapshot) drain(seg); else drainDiscard();
+        if (seg != null && !needSnapshot) { drain(seg); flushShared(seg); } else { drainDiscard(); sharedIn.clear(); }
         if (needSnapshot || seg == null || seg.ticks() >= segmentTicks) {
             startSegment(now);
             seg = buffer.current();
@@ -164,10 +181,14 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
                 seg.chunkRef(h);
                 continue;
             }
+            SoundShare share = SoundShare.of(p, c.bytes(), handle.level());
+            if (share != null) {
+                heard.peekLast().add(share.hash());
+                soundOut.accept(share);
+                if (injectedRecently(share.hash())) continue; // 이미 빌려 적은 것
+            }
             track(p, c.bytes());
             seg.action(FlashbackFormat.ID_GAME_PACKET, c.bytes());
-            SoundShare share = SoundShare.of(p, c.bytes(), handle.level());
-            if (share != null) { heard.peekLast().add(share.hash()); soundOut.accept(share); }
         }
     }
 
