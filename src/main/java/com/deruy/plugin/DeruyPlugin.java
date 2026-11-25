@@ -106,6 +106,9 @@ public class DeruyPlugin extends JavaPlugin {
     /** 영상 편집용 타임라인 (테스트 등에서 null 일 수 있음 → Timeline.log 사용) */
     public com.deruy.plugin.timeline.Timeline getTimeline() { return timeline; }
     private com.deruy.plugin.replay.ReplayService replayService;
+    private final com.deruy.plugin.misc.ChunkHolds chunkHolds = new com.deruy.plugin.misc.ChunkHolds(this);
+    /** 청크 티켓 공용 관리 (운송 열차·녹화 카메라가 같은 청크를 잡아도 서로 안 풀리게) */
+    public com.deruy.plugin.misc.ChunkHolds getChunkHolds() { return chunkHolds; }
     /** 서버 녹화 하이라이트 (꺼져 있거나 이 서버 버전에서 못 쓰면 null) */
     public com.deruy.plugin.replay.ReplayService getReplayService() { return replayService; }
     public com.deruy.plugin.transport.TransportManager getTransportManager() { return transportManager; }
