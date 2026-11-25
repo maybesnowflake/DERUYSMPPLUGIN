@@ -340,6 +340,8 @@ public final class PlayerRecorder {
             if (!s.isEmpty()) eq.add(Pair.of(slot, s.copy()));
         }
         if (!eq.isEmpty()) game(out, new ClientboundSetEquipmentPacket(e.getId(), eq));
+        // 걸려 있는 효과(야간 투시·실명 등) — 남은 시간 그대로
+        for (var effect : e.getActiveEffects()) game(out, new ClientboundUpdateMobEffectPacket(e.getId(), new net.minecraft.world.effect.MobEffectInstance(effect), false));
     }
 
     private void scoreboard(FbOut out) {
