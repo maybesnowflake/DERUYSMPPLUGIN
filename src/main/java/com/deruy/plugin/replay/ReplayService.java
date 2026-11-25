@@ -342,7 +342,11 @@ public final class ReplayService implements Listener {
     public void beginEvent(String key, String cameraType, String label, Supplier<List<Location>> where, double radius, long maxTicks) {
         ActiveEvent old = events.get(key);
         events.put(key, new ActiveEvent(label, cameraType, where, radius, tick + maxTicks));
-        if (old != null && old.label().equals(label)) return; // 이어지는 같은 이벤트(드래곤 등): 기한만 연장
+        if (old != null && old.label().equals(label)) { // 이어지는 같은 이벤트(드래곤 등): 붙은 카메라 기한도 함께 연장
+            for (CameraDef d : cameraDefs.values())
+                if (d.event().equalsIgnoreCase(cameraType) && cameraUntil.containsKey("cam-" + d.name())) cameraUntil.put("cam-" + d.name(), tick + maxTicks);
+            return;
+        }
         for (CameraDef d : cameraDefs.values())
             if (d.event().equalsIgnoreCase(cameraType)) startCamera("cam-" + d.name(), label, () -> d.at().clone(), d.radius(), false, maxTicks);
         eventTick(); // 시작 순간에 있던 사람 바로 포함 + 시작 마커
