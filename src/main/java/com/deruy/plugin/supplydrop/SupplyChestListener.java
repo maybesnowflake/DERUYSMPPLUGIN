@@ -38,6 +38,7 @@ public class SupplyChestListener implements Listener {
         Player player = event.getPlayer();
 
         event.getClickedBlock().setType(Material.AIR);
+        com.deruy.plugin.replay.ReplayService.blockChanged(plugin, event.getClickedBlock());
 
         if (items != null) {
             for (ItemStack item : items) {

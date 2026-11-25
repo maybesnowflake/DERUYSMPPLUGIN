@@ -527,6 +527,12 @@ public final class ReplayService implements Listener {
         if (followEnabled("dragon")) startCamera("follow-dragon", "엔더 드래곤", at, followRadius(), true, 20 * 120);
     }
 
+    /** 다른 기능이 이벤트 없이 블록을 바꿀 때(보급 상자 생성·수령 등) 카메라에 바로 알림 */
+    public static void blockChanged(DeruyPlugin plugin, org.bukkit.block.Block b) {
+        var rs = plugin == null ? null : plugin.getReplayService();
+        if (rs != null) rs.blocks(b);
+    }
+
     // 카메라용 블록·엔티티 소식 (반경 밖이면 각 카메라가 무시)
     private void blocks(org.bukkit.block.Block... bs) {
         if (cameras.isEmpty()) return;

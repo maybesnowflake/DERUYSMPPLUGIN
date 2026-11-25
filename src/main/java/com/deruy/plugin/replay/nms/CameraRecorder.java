@@ -74,6 +74,7 @@ public final class CameraRecorder implements Recorder {
     private boolean needSnapshot = true;
     private String stoppedReason;
     private int missing;
+    private int refreshClock;
 
     /**
      * @param where 카메라 위치 (고정이면 늘 같은 값, 추적이면 대상 위치). null 을 돌려주면 대상 없음
@@ -177,6 +178,14 @@ public final class CameraRecorder implements Recorder {
                 String h = chunk(x, z);
                 if (h != null) seg.chunkRef(h);
             }
+        // 이벤트 없이 바뀐 블록(다른 플러그인의 setType, /fill 등) 대비: 5초마다 범위 청크를 다시 만들어 달라졌으면 통째로 교체
+        if (++refreshClock % 100 == 0) {
+            for (var en : List.copyOf(chunks.entrySet())) {
+                String old = en.getValue();
+                String h = chunk(ChunkPos.getX(en.getKey()), ChunkPos.getZ(en.getKey()));
+                if (h != null && !h.equals(old)) seg.chunkRef(h);
+            }
+        }
         // 블록 변화
         for (long p : changedBlocks) {
             BlockPos pos = BlockPos.of(p);
