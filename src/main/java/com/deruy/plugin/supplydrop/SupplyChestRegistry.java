@@ -40,6 +40,8 @@ public class SupplyChestRegistry {
     }
 
     public int getChestCount() { return chests.size(); }
+    /** 아직 안 연 보급 상자 위치들 (서버 녹화가 근처 플레이어를 고를 때) */
+    public List<Location> locations() { return chests.keySet().stream().map(Location::clone).toList(); }
     public void reconcileChunk(org.bukkit.Chunk chunk) {
         for (Location loc : new ArrayList<>(chests.keySet())) {
             if (!loc.isWorldLoaded() || !chunk.getWorld().equals(loc.getWorld()) || (loc.getBlockX() >> 4) != chunk.getX()

@@ -31,6 +31,11 @@ public final class Timeline implements AutoCloseable {
     /** plugin 에 타임라인이 없으면(테스트 등) 조용히 무시 */
     public static void log(DeruyPlugin plugin, String type, String who, String detail, Location at) {
         if (plugin == null) return;
+        var replay = plugin.getReplayService();
+        if (replay != null) {
+            try { replay.onTimeline(type, who == null ? "" : who, detail == null ? "" : detail, at); }
+            catch (RuntimeException e) { plugin.getLogger().warning("서버 녹화 이벤트 처리 실패: " + e); }
+        }
         Timeline t = plugin.getTimeline();
         if (t != null) t.record(type, who, detail, at);
     }

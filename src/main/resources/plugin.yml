@@ -1,5 +1,5 @@
 name: DeruyPlugin
-version: 1.5.1
+version: 1.6.0
 main: com.deruy.plugin.DeruyPlugin
 api-version: '1.21'
 author: Fsixel
@@ -83,8 +83,8 @@ commands:
     usage: /horn <소리번호 1~8>
     permission: deruy.horn.use
   deruy:
-    description: DERUY 전체 상태 보기 / 영상용 타임라인 기록 확인
-    usage: /<command> status | timeline [YYYY-MM-DD]
+    description: DERUY 전체 상태 보기 / 영상용 타임라인 기록 확인 / 서버 녹화
+    usage: /<command> status | timeline [YYYY-MM-DD] | replay [status|list|save <플레이어>|verify <파일>]
     permission: deruy.admin
   deruyreload:
     description: config.yml을 재시작 없이 다시 불러옴
