@@ -135,7 +135,8 @@ public final class CameraRecorder implements Recorder {
         if (stoppedReason != null) return List.of();
         Location at = where.get();
         if (at == null || at.getWorld() == null) {
-            if (++missing > 200) stop("대상 없음"); // 10초 넘게 대상이 없으면 끝
+            // 10초 넘게 대상이 없으면(운송 중지 등) 지금까지를 저장하고 끝
+            if (++missing > 200) return finish(now);
             return finishIfDue(now);
         }
         missing = 0;
