@@ -116,10 +116,16 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
     /** 큐를 비운 뒤: 이 사람이 최근 직접 받지 않은 것만 기록 */
     private void flushShared(Segment seg) {
         for (SoundShare s : sharedIn) {
-            if (heardRecently(s.hash()) || !injected.peekLast().add(s.hash())) continue;
+            if (heardRecently(s.hash()) || injectedContains(s.hash())) continue; // 다른 사람이 한 틱 늦게 받은 같은 방송도 거름
+            injected.peekLast().add(s.hash());
             seg.action(FlashbackFormat.ID_GAME_PACKET, s.bytes());
         }
         sharedIn.clear();
+    }
+
+    private boolean injectedContains(long h) {
+        for (var set : injected) if (set.contains(h)) return true;
+        return false;
     }
 
     /** 빌려 넣은 것이 나중에 이 사람에게도 직접 도착하면 원본은 한 번 건너뛴다 */
