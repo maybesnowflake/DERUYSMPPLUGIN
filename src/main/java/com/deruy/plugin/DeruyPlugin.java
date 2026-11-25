@@ -105,6 +105,9 @@ public class DeruyPlugin extends JavaPlugin {
     private com.deruy.plugin.timeline.Timeline timeline;
     /** 영상 편집용 타임라인 (테스트 등에서 null 일 수 있음 → Timeline.log 사용) */
     public com.deruy.plugin.timeline.Timeline getTimeline() { return timeline; }
+    private com.deruy.plugin.replay.ReplayService replayService;
+    /** 서버 녹화 하이라이트 (꺼져 있거나 이 서버 버전에서 못 쓰면 null) */
+    public com.deruy.plugin.replay.ReplayService getReplayService() { return replayService; }
     public com.deruy.plugin.transport.TransportManager getTransportManager() { return transportManager; }
     private boolean worldGuardPresent;
     private boolean voiceChatPresent;
@@ -330,12 +333,26 @@ public class DeruyPlugin extends JavaPlugin {
         }
         if (getConfig().getBoolean("question-time.enabled", false)) questionTimeManager.start();
         if (getConfig().getBoolean("random-events.enabled", false)) randomEventManager.startScheduler();
+        startReplay();
 
         getLogger().info("DeruyPlugin 활성화 완료.");
     }
 
+    /** 서버 녹화: 서버 내부 구조에 기대므로, 버전이 안 맞아 실패해도 나머지 기능은 그대로 둔다 */
+    private void startReplay() {
+        if (!getConfig().getBoolean("replay.enabled", true)) return;
+        try {
+            replayService = new com.deruy.plugin.replay.ReplayService(this);
+            replayService.start();
+        } catch (Throwable t) {
+            replayService = null;
+            getLogger().warning("서버 녹화를 켜지 못했습니다(이 서버 버전과 안 맞을 수 있음): " + t);
+        }
+    }
+
     @Override
     public void onDisable() {
+        if (replayService != null) { replayService.stop(); replayService = null; } // 진행 중인 하이라이트 저장
         if (transportManager != null) transportManager.shutdown();
         if (heartAuditLog != null) heartAuditLog.close();
         if (kothManager != null && kothManager.isRunning()) kothManager.stop();

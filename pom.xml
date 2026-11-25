@@ -6,7 +6,7 @@
 
     <groupId>com.deruy</groupId>
     <artifactId>DeruyPlugin</artifactId>
-    <version>1.5.1</version>
+    <version>1.6.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -35,6 +35,8 @@
         <dependency><groupId>org.mockbukkit.mockbukkit</groupId><artifactId>mockbukkit-v1.21</artifactId><version>4.116.3</version><scope>test</scope></dependency>
         <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>6.0.3</version><scope>test</scope></dependency>
         <dependency><groupId>org.mockito</groupId><artifactId>mockito-core</artifactId><version>5.14.2</version><scope>test</scope></dependency>
+        <!-- 서버 녹화(replay.nms)용 Paper 내부 클래스. tools/install-paper-dev.sh 가 로컬에 설치. 플러그인에 포함 안 됨 -->
+        <dependency><groupId>com.deruy.dev</groupId><artifactId>paper-server-mojmap</artifactId><version>1.21.11-132</version><scope>provided</scope></dependency>
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -72,6 +74,15 @@
         <plugins>
             <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.13.0</version></plugin>
             <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.2</version><configuration><argLine>"-javaagent:${settings.localRepository}/org/mockito/mockito-core/5.14.2/mockito-core-5.14.2.jar"</argLine></configuration></plugin>
+            <!-- 서버 녹화는 Mojang 이름으로 컴파일됨 → Paper 가 다시 변환(remap)하지 않도록 표시 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <archive><manifestEntries><paperweight-mappings-namespace>mojang</paperweight-mappings-namespace></manifestEntries></archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

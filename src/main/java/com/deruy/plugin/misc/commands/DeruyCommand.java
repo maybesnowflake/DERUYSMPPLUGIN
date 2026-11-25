@@ -20,7 +20,8 @@ public final class DeruyCommand implements TabExecutor {
         switch (sub) {
             case "status" -> status(s).forEach(s::sendMessage);
             case "timeline" -> timeline(s, a);
-            default -> s.sendMessage("§e/" + label + " status | timeline [YYYY-MM-DD]");
+            case "replay" -> replay(s, a);
+            default -> s.sendMessage("§e/" + label + " status | timeline [YYYY-MM-DD] | replay [status|list|save <플레이어>|verify <파일>]");
         }
         return true;
     }
@@ -47,6 +48,8 @@ public final class DeruyCommand implements TabExecutor {
         out.add("§e질문타임 " + on(plugin.getQuestionTimeManager().isEnabled()) + (plugin.getQuestionTimeManager().isQuestionActive() ? " §6(문제 진행 중)" : ""));
         out.add("§e빙고 " + on(plugin.getBingoManager().isRunning()) + "  §e로케이터바 " + on(plugin.getLocatorBarManager().isRunning()));
         out.add("§e타임라인 기록 " + on(plugin.getConfig().getBoolean("timeline.enabled", true)));
+        var rs = plugin.getReplayService();
+        out.add("§e서버 녹화 " + on(rs != null) + (rs == null ? "" : " §7/ 버퍼 " + rs.memoryBytes() / 1024 / 1024 + "MB"));
         return out;
     }
 
@@ -63,9 +66,53 @@ public final class DeruyCommand implements TabExecutor {
                 + " §7(plugins/" + plugin.getName() + "/ 안)");
     }
 
+    private void replay(CommandSender s, String[] a) {
+        var rs = plugin.getReplayService();
+        if (rs == null) { s.sendMessage("§c서버 녹화가 꺼져 있습니다. §7(config.yml replay.enabled)"); return; }
+        String sub = a.length >= 2 ? a[1].toLowerCase(Locale.ROOT) : "status";
+        switch (sub) {
+            case "status" -> rs.status().forEach(s::sendMessage);
+            case "list" -> {
+                var files = rs.recent(10);
+                s.sendMessage("§d[서버 녹화] §f최근 " + files.size() + "개");
+                files.forEach(f -> s.sendMessage("§7- §f" + f));
+            }
+            case "save" -> {
+                var p = a.length >= 3 ? Bukkit.getPlayerExact(a[2]) : s instanceof org.bukkit.entity.Player self ? self : null;
+                if (p == null) { s.sendMessage("§c플레이어를 찾을 수 없습니다."); return; }
+                s.sendMessage(rs.saveNow(p, "수동") ? "§a" + p.getName() + " 최근 장면을 저장합니다. 잠시 뒤 완료 메시지가 옵니다." : "§c그 플레이어는 녹화 중이 아닙니다.");
+            }
+            case "verify" -> {
+                if (a.length < 3) { s.sendMessage("§e/deruy replay verify <파일> §7(list 에 나온 경로)"); return; }
+                String file = a[2];
+                s.sendMessage("§7검사 중…");
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    List<String> msg = new ArrayList<>();
+                    try {
+                        var r = rs.verify(file);
+                        msg.add((r.ok() ? "§a정상" : "§c문제 " + r.problems().size() + "건") + " §7— 파일 " + r.files() + "개, " + r.totalTicks() / 20 + "초, 패킷 "
+                                + r.gamePackets() + "개, 청크 " + r.cachedChunks() + "개");
+                        r.problems().stream().limit(5).forEach(p -> msg.add("§c- " + p));
+                    } catch (Exception e) { msg.add("§c검사 실패: " + e.getMessage()); }
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        msg.forEach(s::sendMessage);
+                        if (!(s instanceof org.bukkit.entity.Player)) msg.forEach(m -> plugin.getLogger().info("[녹화 검사] " + file + " " + m.replaceAll("§.", "")));
+                    });
+                });
+            }
+            default -> s.sendMessage("§e/deruy replay status | list | save [플레이어] | verify <파일>");
+        }
+    }
+
     @Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a) {
         if (!s.hasPermission("deruy.admin")) return List.of();
-        if (a.length == 1) return List.of("status", "timeline").stream().filter(x -> x.startsWith(a[0].toLowerCase(Locale.ROOT))).toList();
+        if (a.length == 2 && a[0].equalsIgnoreCase("replay"))
+            return List.of("status", "list", "save", "verify").stream().filter(x -> x.startsWith(a[1].toLowerCase(Locale.ROOT))).toList();
+        if (a.length == 3 && a[0].equalsIgnoreCase("replay") && a[1].equalsIgnoreCase("save"))
+            return Bukkit.getOnlinePlayers().stream().map(org.bukkit.entity.Player::getName).toList();
+        if (a.length == 3 && a[0].equalsIgnoreCase("replay") && a[1].equalsIgnoreCase("verify") && plugin.getReplayService() != null)
+            return plugin.getReplayService().recent(20);
+        if (a.length == 1) return List.of("status", "timeline", "replay").stream().filter(x -> x.startsWith(a[0].toLowerCase(Locale.ROOT))).toList();
         if (a.length == 2 && a[0].equalsIgnoreCase("timeline")) return List.of(LocalDate.now().toString());
         return List.of();
     }

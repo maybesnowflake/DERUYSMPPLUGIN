@@ -604,3 +604,31 @@ transport:
 # /deruy timeline 으로 오늘 기록 건수·파일 위치 확인
 timeline:
   enabled: true
+
+# 서버 녹화 하이라이트 (Flashback 리플레이 zip)
+# 클라이언트 녹화 없이 서버가 접속자 전원을 되감기 버퍼에 담아 두다가,
+#  - 플레이어끼리 때리면: 때리기 before-seconds 전부터 마지막 타격 뒤 end-after-seconds 까지
+#  - 이벤트가 열리면: 이벤트 근처(또는 전원) 플레이어를 이벤트 동안
+# 플레이어 시점마다 한 파일씩 plugins/DeruyPlugin/replays/<날짜>/ 에 저장. 겹치면 한 파일로 합침.
+# 파일은 Flashback 모드(1.21.11)의 replays 폴더에 넣어 열면 됨. 녹화에는 채팅도 들어가니 서버원에게 알릴 것.
+replay:
+  enabled: true
+  folder: replays
+  segment-seconds: 30        # 되감기 단위(스냅샷 간격). 시작점은 최대 이만큼 더 앞에서 잡힘
+  after-seconds: 5           # 끝난 뒤 여유
+  max-clip-minutes: 15       # 이보다 길면 파일을 나눠 이어서 저장
+  max-buffer-mb: 768         # 메모리 상한(넘으면 녹화 중이 아닌 사람의 되감기부터 줄임)
+  max-disk-gb: 20            # 폴더 용량 상한(넘으면 오래된 파일부터 삭제)
+  max-queued-packets: 50000  # 한 사람 패킷이 이만큼 밀리면 그 사람 녹화만 멈춤(서버 보호)
+  marker-radius: 96          # 킬·보물·점령 같은 순간을 근처 녹화 파일에 마커로
+  pvp:
+    before-seconds: 60       # 때리기 전 보여 줄 시간
+    end-after-seconds: 15    # 마지막 타격 뒤 이만큼 아무도 안 때리면 싸움 끝
+  events:
+    random-event: true       # 랜덤 이벤트 동안 전원
+    transport: true          # 하트 운송전 동안 열차 근처
+    transport-radius: 64
+    koth: true               # KOTH 동안 구역 근처
+    koth-radius: 48
+    supply-drop: true        # 보급 동안 상자 근처
+    supply-radius: 32

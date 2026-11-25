@@ -27,6 +27,15 @@ jobs:
           java-version: '21'
           cache: maven
 
+      - name: Cache Paper dev classes
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/com/deruy/dev
+          key: paper-dev-${{ hashFiles('tools/install-paper-dev.sh') }}
+
+      - name: Install Paper dev classes (서버 녹화 컴파일용)
+        run: tools/install-paper-dev.sh
+
       - name: Build
         run: mvn -B clean package
 
