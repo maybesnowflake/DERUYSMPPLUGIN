@@ -358,7 +358,7 @@ public final class ReplayService implements Listener {
     public void endEvent(String key) {
         ActiveEvent e = events.remove(key);
         if (e == null) return;
-        for (CameraDef d : cameraDefs.values()) if (d.event().equalsIgnoreCase(e.cameraType())) endCamera("cam-" + d.name());
+        endTypeCamerasIfIdle(e.cameraType());
         for (PlayerRecorder r : recorders.values()) if (r.buffer().labels().contains(e.label()))
             highlight(r.player(), e.label(), tick, tick + tailTicks, e.label() + " 끝", 0x33AAFF, null);
     }
@@ -368,7 +368,7 @@ public final class ReplayService implements Listener {
             var en = it.next();
             if (tick <= en.getValue().until()) continue;
             it.remove(); // 기한이 지난 이벤트(끝 신호를 못 받음)는 카메라도 정리
-            for (CameraDef d : cameraDefs.values()) if (d.event().equalsIgnoreCase(en.getValue().cameraType())) endCamera("cam-" + d.name());
+            endTypeCamerasIfIdle(en.getValue().cameraType());
             if (en.getKey().equals("dragon")) endCamera("follow-dragon");
         }
         // 돌고 있는 카메라: 이벤트 동안 계속 녹화
@@ -415,6 +415,13 @@ public final class ReplayService implements Listener {
         cameraLabel.put(key, label);
         cameraUntil.put(key, tick + maxTicks);
         return true;
+    }
+
+    /** 같은 종류(예: 일반·슈퍼 KOTH)의 다른 이벤트가 아직 진행 중이면 그 종류 카메라는 계속 */
+    private void endTypeCamerasIfIdle(String cameraType) {
+        if (cameraType == null) return;
+        for (ActiveEvent other : events.values()) if (cameraType.equalsIgnoreCase(other.cameraType())) return;
+        for (CameraDef d : cameraDefs.values()) if (d.event().equalsIgnoreCase(cameraType)) endCamera("cam-" + d.name());
     }
 
     /** 이벤트 끝: 꼬리만큼 더 찍고 저장되면 카메라는 멈춘다 */
