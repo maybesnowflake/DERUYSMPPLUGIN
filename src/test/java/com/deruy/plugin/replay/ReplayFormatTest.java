@@ -147,4 +147,41 @@ class ReplayFormatTest {
         for (String l : List.of("PvP", "보급 슈퍼", "수동", "퇴장", "Custom Fight!"))
             assertTrue(com.deruy.plugin.replay.ReplayService.tag(l).matches("[a-z0-9_-]+"), l);
     }
+
+    @Test void chunkStoreRefsAreAtomicAcrossThreads() throws Exception {
+        ChunkStore store = new ChunkStore();
+        byte[] p = packet(39, 300);
+        String held = store.put(p);                  // 이 참조는 끝까지 들고 있음
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(4);
+        var failed = new java.util.concurrent.atomic.AtomicBoolean();
+        for (int t = 0; t < 4; t++) pool.execute(() -> {
+            for (int i = 0; i < 20000; i++) {
+                String h = store.put(p.clone());
+                if (store.get(held) == null) failed.set(true);
+                store.release(h);
+                if (i % 97 == 0) store.compressPending();
+            }
+        });
+        pool.shutdown();
+        assertTrue(pool.awaitTermination(60, java.util.concurrent.TimeUnit.SECONDS));
+        assertFalse(failed.get(), "참조를 들고 있는 동안 사라지면 안 됨");
+        assertEquals(1, store.refs(held));
+        store.release(held);
+        assertEquals(0, store.size());
+        assertEquals(0, store.memoryBytes(), "메모리 집계도 0으로 돌아옴");
+    }
+
+    @Test void closedSegmentDropsWriteBuffer() {
+        ChunkStore store = new ChunkStore();
+        String h = store.put(packet(39, 10));
+        Segment s = new Segment(store, 0, snapshot(h), Set.of(h));
+        byte[] big = new byte[1 << 20];
+        for (int i = 0; i < 8; i++) s.action(FlashbackFormat.ID_GAME_PACKET, big);
+        long open = s.memoryBytes();
+        assertTrue(open >= 8L << 20, "열린 구간은 버퍼 용량만큼: " + open);
+        s.close(); s.compress();
+        assertTrue(s.memoryBytes() < 1 << 20, "닫고 압축하면 작아짐: " + s.memoryBytes());
+        assertEquals(8 * ((1 << 20) + 5 + FbOut.varIntSize(FlashbackFormat.ID_GAME_PACKET) - 1), s.actionsCopy().length, "내용은 그대로");
+        s.release(); store.release(h);
+    }
 }

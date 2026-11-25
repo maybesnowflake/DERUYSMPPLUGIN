@@ -14,7 +14,7 @@ import java.util.Set;
 public final class Segment {
     public final long startTick;
     private final byte[] snapshot;
-    private final FbOut actions = new FbOut(1 << 14);
+    private FbOut actions = new FbOut(1 << 14); // 닫으면 null (쓰기 버퍼 통째로 놓아줌)
     private final Set<String> refs = new HashSet<>();
     private int ticks;
     private boolean closed;
@@ -61,7 +61,7 @@ public final class Segment {
         closed = true;
         closedActions = actions.toByteArray();
         actionsLength = closedActions.length;
-        actions.clear();
+        actions = null;
     }
 
     private void check() { if (closed) throw new IllegalStateException("닫힌 구간"); }
@@ -89,7 +89,8 @@ public final class Segment {
 
     public long memoryBytes() {
         byte[] c = closedActions, d = deflatedActions;
-        long a = !closed ? actions.size() : c != null ? c.length : d != null ? d.length : 0;
+        FbOut open = actions;
+        long a = open != null ? open.array().length : c != null ? c.length : d != null ? d.length : 0; // 열린 구간은 버퍼 용량 기준
         return a + snapshot.length;
     }
 }
