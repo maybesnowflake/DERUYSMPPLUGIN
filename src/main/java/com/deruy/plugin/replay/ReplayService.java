@@ -453,6 +453,17 @@ public final class ReplayService implements Listener {
         if (list != null) for (var c : list) c.removePluginChunkTicket(plugin);
     }
 
+    /** 정의를 바꾸면 돌고 있던 녹화기는 지금까지를 저장하고 새로 시작 */
+    private void retireCamera(String key) {
+        CameraRecorder cam = cameras.remove(key);
+        cameraUntil.remove(key);
+        releaseChunks(key);
+        if (cam == null) return;
+        try { for (PlayerBuffer.Clip clip : cam.finish(tick)) export(cam, clip); }
+        catch (RuntimeException | LinkageError e) { plugin.getLogger().warning("서버 녹화: 카메라 " + key + " 마무리 실패 — " + e); }
+        io.execute(cam::release);
+    }
+
     private void loadCameras() {
         cameraDefs.clear();
         var sec = plugin.getDataStore() == null ? null : plugin.getDataStore().section("replay-cameras");
@@ -474,8 +485,13 @@ public final class ReplayService implements Listener {
         ds.set("replay-cameras." + name + ".at", at.clone());
         ds.set("replay-cameras." + name + ".radius", radius);
         ds.save();
-        endCamera("cam-" + name);
+        retireCamera("cam-" + name);
         loadCameras();
+        // 이미 진행 중인 같은 종류 이벤트가 있으면 새 카메라도 바로 합류
+        for (ActiveEvent e : events.values()) if (event.equalsIgnoreCase(e.cameraType())) {
+            CameraDef d = cameraDefs.get(name);
+            if (d != null) startCamera("cam-" + name, e.label(), () -> d.at().clone(), d.radius(), false, e.until() - tick);
+        }
     }
 
     public boolean removeCamera(String name) {
@@ -483,7 +499,7 @@ public final class ReplayService implements Listener {
         var ds = plugin.getDataStore();
         ds.set("replay-cameras." + name, null);
         ds.save();
-        endCamera("cam-" + name);
+        retireCamera("cam-" + name);
         cameraDefs.remove(name);
         return true;
     }
