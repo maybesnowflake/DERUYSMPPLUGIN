@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -17,10 +16,12 @@ import java.util.zip.Inflater;
  */
 public final class ChunkStore {
     private static final class Entry {
+        final String hash;
+        Entry(String hash) { this.hash = hash; }
         volatile byte[] raw;          // 압축 전(막 들어온 것)
         volatile byte[] deflated;     // 압축 후
         volatile int rawLength;
-        final AtomicInteger refs = new AtomicInteger();
+        int refs; // 해시별 compute 안에서만 바꾼다 (등록·증가·마지막 제거가 한 번에 일어나도록)
     }
 
     private final ConcurrentHashMap<String, Entry> entries = new ConcurrentHashMap<>();
@@ -35,32 +36,32 @@ public final class ChunkStore {
     /** 내용을 넣고 참조 1개를 잡는다. 반환: 해시 */
     public String put(byte[] packet) {
         String h = hash(packet);
-        Entry e = entries.computeIfAbsent(h, k -> {
-            Entry n = new Entry();
-            n.raw = packet; n.rawLength = packet.length;
-            bytes.addAndGet(packet.length);
-            return n;
+        entries.compute(h, (k, e) -> {
+            if (e == null) {
+                e = new Entry(k);
+                e.raw = packet; e.rawLength = packet.length;
+                bytes.addAndGet(packet.length);
+            }
+            e.refs++;
+            return e;
         });
-        e.refs.incrementAndGet();
         return h;
     }
 
+    /** 이미 있는 내용의 참조를 하나 더 잡는다. 없으면 false */
     public boolean acquire(String h) {
-        Entry e = entries.get(h);
-        if (e == null) return false;
-        e.refs.incrementAndGet();
-        return true;
+        return entries.computeIfPresent(h, (k, e) -> { e.refs++; return e; }) != null;
     }
 
     public void release(String h) {
-        Entry e = entries.get(h);
-        if (e == null) return;
-        if (e.refs.decrementAndGet() <= 0) {
-            if (entries.remove(h, e)) {
+        entries.computeIfPresent(h, (k, e) -> {
+            if (--e.refs > 0) return e;
+            synchronized (e) {
                 byte[] d = e.deflated, r = e.raw;
                 bytes.addAndGet(-(d != null ? d.length : r != null ? r.length : 0));
             }
-        }
+            return null; // 마지막 참조 → 같은 원자 연산 안에서 제거
+        });
     }
 
     /** 압축 안 된 항목을 압축해 메모리를 줄인다 (저장 스레드에서 주기적으로) */
@@ -70,7 +71,8 @@ public final class ChunkStore {
             if (r == null) continue;
             byte[] d = deflate(r);
             synchronized (e) {
-                if (e.raw == r) { e.deflated = d; e.raw = null; bytes.addAndGet(d.length - r.length); }
+                // 그 사이 제거됐으면(맵에 없으면) 집계를 건드리지 않는다
+                if (e.raw == r && entries.get(e.hash) == e) { e.deflated = d; e.raw = null; bytes.addAndGet(d.length - r.length); }
             }
         }
     }
@@ -86,7 +88,7 @@ public final class ChunkStore {
 
     public int size() { return entries.size(); }
     public long memoryBytes() { return bytes.get(); }
-    public int refs(String h) { Entry e = entries.get(h); return e == null ? 0 : e.refs.get(); }
+    public int refs(String h) { Entry e = entries.get(h); return e == null ? 0 : e.refs; }
 
     static byte[] deflate(byte[] in) {
         Deflater d = new Deflater(Deflater.BEST_SPEED);
