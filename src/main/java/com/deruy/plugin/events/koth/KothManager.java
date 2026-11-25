@@ -359,7 +359,7 @@ public class KothManager implements GameEvent {
     private Player findPlayerInZone(KothZone zone) {
         Player fallback = null;
         for (Player p : zone.getCorner1().getWorld().getPlayers()) {
-            if (!canCapture(p)) continue;
+            if (!canCapture(p) || com.deruy.plugin.misc.Online.isFake(p)) continue;
             if (zone.contains(p.getLocation())) {
                 if (p.getUniqueId().equals(zone.getCurrentHolder())) {
                     return p;

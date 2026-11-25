@@ -106,6 +106,8 @@ public final class CameraRecorder implements Recorder {
     }
 
     @Override public String name() { return name; }
+    private static boolean isEar(Entity e) { return e instanceof ServerPlayer sp && com.deruy.plugin.misc.Online.isFake(sp.getUUID()); }
+
     /** 지금 카메라가 보는 자리 (추적 카메라면 대상 위치, 대상이 없으면 null) */
     public Location where() { return where.get(); }
     public double radius() { return radius; }
@@ -246,7 +248,7 @@ public final class CameraRecorder implements Recorder {
     private Map<Integer, Entity> inRange(Location at) {
         Map<Integer, Entity> out = new LinkedHashMap<>();
         AABB box = new AABB(at.getX() - radius, at.getY() - radius, at.getZ() - radius, at.getX() + radius, at.getY() + radius, at.getZ() + radius);
-        for (Entity e : level.getEntities((Entity) null, box, e -> !e.isRemoved() && e.moonrise$getTrackedEntity() != null)) out.put(e.getId(), e);
+        for (Entity e : level.getEntities((Entity) null, box, e -> !e.isRemoved() && e.moonrise$getTrackedEntity() != null && !isEar(e))) out.put(e.getId(), e);
         return out;
     }
 
@@ -388,6 +390,7 @@ public final class CameraRecorder implements Recorder {
             buf.writeVarInt(GameType.SPECTATOR.getId());
         }));
         List<ServerPlayer> players = new ArrayList<>(server.getPlayerList().getPlayers());
+        players.removeIf(CameraRecorder::isEar); // 카메라 관전자는 녹화에 안 넣음
         game(out, ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(players));
         game(out, new ClientboundTabListPacket(Component.empty(), Component.empty()));
         game(out, new ClientboundInitializeBorderPacket(level.getWorldBorder()));
