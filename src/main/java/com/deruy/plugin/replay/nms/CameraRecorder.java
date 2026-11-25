@@ -68,7 +68,6 @@ public final class CameraRecorder implements Recorder {
     private ServerLevel level;
     private final Map<Long, String> chunks = new HashMap<>();
     private final Int2ObjectOpenHashMap<Seen> seen = new Int2ObjectOpenHashMap<>();
-    private final Set<UUID> infoSent = new HashSet<>();
     private final LongOpenHashSet changedBlocks = new LongOpenHashSet();
     private final List<Packet<?>> pending = new ArrayList<>();
     private Pos cameraPos;
@@ -218,8 +217,8 @@ public final class CameraRecorder implements Recorder {
 
     /** 처음 보는 엔티티: 서버가 플레이어에게 처음 보여 줄 때와 같은 묶음 */
     private void pair(Segment seg, Entity e) {
-        if (e instanceof ServerPlayer sp && infoSent.add(sp.getUUID()))
-            game(seg, ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(sp)));
+        // 플레이어는 생성 직전에 항상 프로필을 보낸다 (스냅샷에만 있던 프로필은 연속 재생에선 적용되지 않음)
+        if (e instanceof ServerPlayer sp) game(seg, ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(sp)));
         var te = e.moonrise$getTrackedEntity();
         if (te == null) return;
         game(seg, e.getAddEntityPacket(te.serverEntity));
@@ -353,10 +352,8 @@ public final class CameraRecorder implements Recorder {
             ByteBufCodecs.GAME_PROFILE.encode(buf, profile);
             buf.writeVarInt(GameType.SPECTATOR.getId());
         }));
-        infoSent.clear();
         List<ServerPlayer> players = new ArrayList<>(server.getPlayerList().getPlayers());
         game(out, ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(players));
-        players.forEach(p -> infoSent.add(p.getUUID()));
         game(out, new ClientboundTabListPacket(Component.empty(), Component.empty()));
         game(out, new ClientboundInitializeBorderPacket(level.getWorldBorder()));
         game(out, new ClientboundSetTimePacket(level.getLevelData().getGameTime(), level.getDayTime(),
