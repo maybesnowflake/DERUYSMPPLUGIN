@@ -9,6 +9,7 @@ import com.deruy.plugin.replay.format.ReplayVerifier;
 import com.deruy.plugin.replay.nms.Codecs;
 import com.deruy.plugin.replay.nms.CameraRecorder;
 import com.deruy.plugin.replay.nms.PlayerRecorder;
+import com.deruy.plugin.replay.nms.SoundShare;
 import com.deruy.plugin.replay.buffer.Recorder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -146,14 +147,25 @@ public final class ReplayService implements Listener {
         PlayerRecorder old = recorders.remove(p.getUniqueId());
         if (old != null) { old.stop("다시 접속"); old.release(); }
         try {
-            recorders.put(p.getUniqueId(), new PlayerRecorder(p, codecs, store, new PlayerBuffer(preRollTicks, maxClipTicks), configBlob, segmentTicks, maxQueued));
+            PlayerRecorder rec = new PlayerRecorder(p, codecs, store, new PlayerBuffer(preRollTicks, maxClipTicks), configBlob, segmentTicks, maxQueued);
+            rec.soundOut(s -> { if (soundsNow.size() < 20000) soundsNow.add(s); });
+            recorders.put(p.getUniqueId(), rec);
         } catch (RuntimeException | LinkageError e) {
             plugin.getLogger().warning("서버 녹화: " + p.getName() + " 녹화를 시작하지 못했습니다 — " + e);
         }
     }
 
+    /** 이번 틱에 플레이어들이 받은 소리 계열 → 다음 틱에 카메라·못 받은 사람에게 나눔 */
+    private List<SoundShare> soundsNow = new ArrayList<>();
+
     private void tick() {
         tick++;
+        List<SoundShare> shared = soundsNow;
+        soundsNow = new ArrayList<>();
+        if (!shared.isEmpty()) {
+            for (PlayerRecorder r : recorders.values()) try { r.injectSounds(shared); } catch (RuntimeException | LinkageError ignored) { }
+            for (CameraRecorder c : cameras.values()) try { c.injectSounds(shared); } catch (RuntimeException | LinkageError ignored) { }
+        }
         tickAll(recorders.values().iterator(), "퇴장");
         tickAll(cameras.values().iterator(), "끝");
         if (tick % 20 == 0) {

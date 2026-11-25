@@ -253,4 +253,14 @@ class ReplayFormatTest {
         assertTrue(lines.get(0).endsWith(EditBundle.INDEX_HEADER));
         assertTrue(lines.get(2).contains("\"KOTH, 1\",'=B"), lines.get(2));
     }
+
+    @Test void sharedSoundsDedupeAndRange() {
+        byte[] a = packet(110, 30), b = packet(110, 30), c = packet(110, 31);
+        var sa = new com.deruy.plugin.replay.nms.SoundShare("minecraft:overworld", 0, 64, 0, a, com.deruy.plugin.replay.nms.SoundShare.hash(a), com.deruy.plugin.replay.nms.SoundShare.NO_POS);
+        assertEquals(sa.hash(), com.deruy.plugin.replay.nms.SoundShare.hash(b), "같은 방송은 같은 해시");
+        assertNotEquals(sa.hash(), com.deruy.plugin.replay.nms.SoundShare.hash(c));
+        assertTrue(sa.near("minecraft:overworld", 20, 64, 20, 32));
+        assertFalse(sa.near("minecraft:overworld", 40, 64, 40, 32));
+        assertFalse(sa.near("minecraft:the_nether", 0, 64, 0, 32));
+    }
 }

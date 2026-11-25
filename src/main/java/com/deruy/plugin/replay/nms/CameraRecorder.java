@@ -70,6 +70,11 @@ public final class CameraRecorder implements Recorder {
     private final Int2ObjectOpenHashMap<Seen> seen = new Int2ObjectOpenHashMap<>();
     private final LongOpenHashSet changedBlocks = new LongOpenHashSet();
     private final List<Packet<?>> pending = new ArrayList<>();
+    private final List<byte[]> pendingBytes = new ArrayList<>();
+    private final it.unimi.dsi.fastutil.longs.LongOpenHashSet soundSeen = new it.unimi.dsi.fastutil.longs.LongOpenHashSet();
+    /** 직접 만든 블록 파편 위치 → 그때의 묶음 번호 (나눠 받은 같은 파편과 겹치지 않게, 2묶음 동안) */
+    private final it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap broke = new it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap();
+    private int batch;
     private Pos cameraPos;
     private boolean needSnapshot = true;
     private String stoppedReason;
@@ -116,7 +121,23 @@ public final class CameraRecorder implements Recorder {
         if (level == null || ((CraftWorld) b.getWorld()).getHandle() != level || !chunks.containsKey(ChunkPos.asLong(b.getX() >> 4, b.getZ() >> 4))) return;
         var state = ((org.bukkit.craftbukkit.block.data.CraftBlockData) before).getState();
         pending.add(new ClientboundLevelEventPacket(2001, new BlockPos(b.getX(), b.getY(), b.getZ()), Block.getId(state), false)); // 부서지는 파편
+        broke.put(BlockPos.asLong(b.getX(), b.getY(), b.getZ()), batch);
         changedBlocks.add(BlockPos.asLong(b.getX(), b.getY(), b.getZ()));
+    }
+
+    /** 근처 플레이어들이 받은 소리·파편·폭발 (같은 방송은 한 번만) */
+    public void injectSounds(List<SoundShare> shared) {
+        batch++;
+        if (!broke.isEmpty()) broke.values().removeIf(v -> batch - v > 2);
+        soundSeen.clear(); // 한 번 방송을 여러 사람이 받은 것만 거름 — 다음 틱의 같은 효과는 새 효과
+        if (level == null || cameraPos == null || shared.isEmpty()) return;
+        String dim = level.dimension().identifier().toString();
+        Location at = where.get();
+        if (at == null) return;
+        for (SoundShare s : shared)
+            if (s.near(dim, at.getX(), at.getY(), at.getZ(), radius + 16)
+                    && !(s.breakAt() != SoundShare.NO_POS && broke.containsKey(s.breakAt()))
+                    && soundSeen.add(s.hash())) pendingBytes.add(s.bytes());
     }
 
     public void entityEvent(org.bukkit.entity.Entity e, String kind) {
@@ -214,6 +235,8 @@ public final class CameraRecorder implements Recorder {
         }
         for (Packet<?> p : pending) game(seg, p);
         pending.clear();
+        for (byte[] b : pendingBytes) seg.action(FlashbackFormat.ID_GAME_PACKET, b);
+        pendingBytes.clear();
         if (moved > 0) writeMoves(seg, moves, moved);
     }
 
@@ -393,6 +416,7 @@ public final class CameraRecorder implements Recorder {
         // 엔티티: 지금 범위 안
         seen.clear();
         pending.clear();
+        pendingBytes.clear();
         Segment tmp = new Segment(store, now, new byte[0], Set.of());
         for (Entity e : inRange(at).values()) pair(tmp, e);
         tmp.close();

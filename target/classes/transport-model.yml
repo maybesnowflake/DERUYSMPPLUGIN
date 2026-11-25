@@ -1,0 +1,40 @@
+# DERUY 보물 수레 — 리소스팩 모델 (resourcepack/DERUY_TreasureWagon)
+# 리소스팩이 없는 서버라면 transport-model-blocks.yml(블록 238개 조립판) 내용으로 바꾸고 /transport reload
+schema: 1
+width: 3.0
+body-length: 4.0
+wall-height: 1.27
+parts:
+  # 몸체(바퀴 없음). 모델 중심이 바닥에서 3블록 위, 절반 크기로 만들어 2배로 표시
+  - name: "body"
+    kind: "item"
+    material: "PAPER"
+    item-model: "deruy:treasure_wagon_body"
+    position: [0, 3.0, 0]
+    scale: [2, 2, 2]
+    rotation: [0, 0, 0]
+  # 바퀴 4개: spin=true 면 굴러간 거리만큼 회전
+  - {name: "wheel-fl", kind: "item", material: "PAPER", item-model: "deruy:wagon_wheel", position: [-1.48, 0.52, 1.3], scale: [2, 2, 2], rotation: [0, 0, 0], spin: true}
+  - {name: "wheel-fr", kind: "item", material: "PAPER", item-model: "deruy:wagon_wheel", position: [1.48, 0.52, 1.3], scale: [2, 2, 2], rotation: [0, 0, 0], spin: true}
+  - {name: "wheel-bl", kind: "item", material: "PAPER", item-model: "deruy:wagon_wheel", position: [-1.48, 0.52, -1.3], scale: [2, 2, 2], rotation: [0, 0, 0], spin: true}
+  - {name: "wheel-br", kind: "item", material: "PAPER", item-model: "deruy:wagon_wheel", position: [1.48, 0.52, -1.3], scale: [2, 2, 2], rotation: [0, 0, 0], spin: true}
+
+# 움직임: 단계별 몸체 흔들림(도) [멀쩡, 75%, 50%, 25%], 바퀴 반지름(블록), 바퀴가 거꾸로 돌면 spin-direction: -1
+motion:
+  wobble-degrees: [0.5, 0.9, 1.6, 2.8]
+  wheel-radius: 0.5
+  spin-direction: 1
+
+# 체력 비율(남은 체력 / 최대 체력)이 below 이하가 되면 모델 교체.
+# item-model: 몸체 모델 / parts: 파트별 덮어쓰기(none = 숨김) / tilt: 바닥 중심 기준 기울기(도) [x, y, z]
+damage-stages:
+  - below: 0.75   # 살짝 부서짐: 판자 몇 장 빠짐, 뒤 랜턴 떨어짐, 뒤오른쪽 바퀴 살 하나 빠짐
+    item-model: "deruy:treasure_wagon_75_body"
+    parts: {wheel-br: "deruy:wagon_wheel_b1"}
+  - below: 0.50   # 거의 부서짐: 왼쪽 벽 날아감, 앞 기둥 부러짐, 보물 감소, 뒤왼쪽 바퀴 크게 부서짐
+    item-model: "deruy:treasure_wagon_50_body"
+    parts: {wheel-br: "deruy:wagon_wheel_b1", wheel-bl: "deruy:wagon_wheel_b2"}
+  - below: 0.25   # 겨우 굴러감: 앞왼쪽 바퀴 빠짐, 벽 거의 없음, 보물 조금
+    item-model: "deruy:treasure_wagon_25_body"
+    parts: {wheel-fl: "none", wheel-fr: "deruy:wagon_wheel_b2", wheel-bl: "deruy:wagon_wheel_b2", wheel-br: "deruy:wagon_wheel_b1"}
+    tilt: [4, 0, 6]
