@@ -69,6 +69,11 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
     private int lastHeldSlot = -1;
     private boolean swingMain, swingOff;
     private boolean needSnapshot = true;
+    /** 이 사람이 받은 소리 계열을 다른 녹화와 나누는 곳 (서비스가 설정) */
+    private java.util.function.Consumer<SoundShare> soundOut = s -> { };
+    /** 최근 3틱 동안 받은 소리 해시 — 빌려 온 소리와 겹치지 않게 */
+    private final ArrayDeque<it.unimi.dsi.fastutil.longs.LongOpenHashSet> heard = new ArrayDeque<>();
+    private static final double HEAR = 32;
     private String stoppedReason;
 
     public PlayerRecorder(Player player, Codecs codecs, ChunkStore store, PlayerBuffer buffer, String configBlob, int segmentTicks, int maxQueued) {
@@ -93,6 +98,26 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
     @Override public String stoppedReason() { return stoppedReason; }
     @Override public boolean alive() { return stoppedReason == null; }
 
+    public void soundOut(java.util.function.Consumer<SoundShare> out) { this.soundOut = out; }
+
+    /** 근처 다른 사람이 받은 소리 중 이 사람은 못 받은 것(본인 발소리 등)을 넣는다. tick() 전에 호출 */
+    public void injectSounds(List<SoundShare> shared) {
+        Segment seg = buffer.current();
+        if (shared.isEmpty() || seg == null || seg.closed() || needSnapshot || stoppedReason != null) return;
+        String dim = handle.level().dimension().identifier().toString();
+        if (heard.isEmpty()) heard.addLast(new it.unimi.dsi.fastutil.longs.LongOpenHashSet());
+        for (SoundShare s : shared) {
+            if (!s.near(dim, handle.getX(), handle.getY(), handle.getZ(), HEAR) || heardRecently(s.hash())) continue;
+            seg.action(FlashbackFormat.ID_GAME_PACKET, s.bytes());
+            heard.peekLast().add(s.hash());
+        }
+    }
+
+    private boolean heardRecently(long h) {
+        for (var set : heard) if (set.contains(h)) return true;
+        return false;
+    }
+
     public void swing(boolean mainHand) { if (mainHand) swingMain = true; else swingOff = true; }
 
     /** 매 틱 (서버 스레드). 반환: 내보낼 클립들 */
@@ -101,6 +126,8 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
         if (!tap.active()) { stop("패킷 수집 중단: " + tap.failure()); return List.of(); }
         if (tap.configuring()) { drainDiscard(); needSnapshot = true; return List.of(); }
 
+        heard.addLast(new it.unimi.dsi.fastutil.longs.LongOpenHashSet());
+        while (heard.size() > 3) heard.removeFirst();
         Segment seg = buffer.current();
         if (seg != null && !needSnapshot) drain(seg); else drainDiscard();
         if (needSnapshot || seg == null || seg.ticks() >= segmentTicks) {
@@ -139,6 +166,8 @@ public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Reco
             }
             track(p, c.bytes());
             seg.action(FlashbackFormat.ID_GAME_PACKET, c.bytes());
+            SoundShare share = SoundShare.of(p, c.bytes(), handle.level());
+            if (share != null) { heard.peekLast().add(share.hash()); soundOut.accept(share); }
         }
     }
 
