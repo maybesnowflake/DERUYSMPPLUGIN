@@ -231,11 +231,11 @@ public final class ReplayService implements Listener {
                 }
             }
             case "TRANSPORT_ARRIVED", "TRANSPORT_DESTROYED" -> endEvent("transport");
-            case "KOTH_START" -> {
+            case "KOTH_START" -> { // 일반·슈퍼 KOTH 가 동시에 열릴 수 있어 이름(who)별로 따로
                 if (ev == null || ev.getBoolean("koth", true))
-                    beginEvent("koth", "KOTH " + who, this::kothCenters, ev == null ? 48 : ev.getDouble("koth-radius", 48), 20 * 60 * 40);
+                    beginEvent("koth-" + who, "KOTH " + who, () -> kothCenters(who), ev == null ? 48 : ev.getDouble("koth-radius", 48), 20 * 60 * 40);
             }
-            case "KOTH_END" -> endEvent("koth");
+            case "KOTH_END" -> endEvent("koth-" + who);
             case "SUPPLY_DROP" -> {
                 if (ev == null || ev.getBoolean("supply-drop", true)) {
                     int minutes = 10;
@@ -258,10 +258,10 @@ public final class ReplayService implements Listener {
         }
     }
 
-    private List<Location> kothCenters() {
+    private List<Location> kothCenters(String label) {
         List<Location> out = new ArrayList<>();
         for (var k : List.of(plugin.getKothManager(), plugin.getSuperKothManager())) {
-            if (k == null || !k.isRunning()) continue;
+            if (k == null || !k.isRunning() || !label.equals(k.getLabel())) continue;
             for (String id : k.getActiveZoneIds()) {
                 var z = k.getZones().get(id);
                 if (z == null || !z.isComplete()) continue;
