@@ -20,6 +20,7 @@ public final class SupplyChestProtectionListener implements Listener {
     private void release(Block block) {
         var items = plugin.getSupplyChestRegistry().consume(block.getLocation());
         block.setType(Material.AIR);
+        com.deruy.plugin.replay.ReplayService.blockChanged(plugin, block);
         if (items != null) items.forEach(i -> block.getWorld().dropItemNaturally(block.getLocation().add(.5,.5,.5),i));
     }
     @EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled=true)

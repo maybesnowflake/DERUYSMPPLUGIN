@@ -135,11 +135,11 @@ public final class TransportManager implements Listener {
     private void spawn(Location at){try{hold(at);displays.addAll(model.spawn(at));damageStage=-1;travelled=0;current=at.clone();}catch(RuntimeException e){stop();throw e;}}
     private double travelled=0;
     private void move(Location at){hold(at);if(current!=null&&current.getWorld().equals(at.getWorld()))travelled+=current.distance(at);for(Display d:displays)if(!d.teleport(at))throw new IllegalStateException("디스플레이 이동이 차단되었습니다.");current=at.clone();if(model.animated())model.pose(displays,damageStage,travelled,2);raid.move(at);}
-    private void hold(Location at){Set<Chunk> needed=new HashSet<>();int cx=at.getBlockX()>>4,cz=at.getBlockZ()>>4;for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++){Chunk c=at.getWorld().getChunkAt(cx+dx,cz+dz);needed.add(c);if(!tickets.contains(c)&&c.addPluginChunkTicket(plugin))tickets.add(c);}
-        for(Chunk c:new HashSet<>(tickets))if(!needed.contains(c)){c.removePluginChunkTicket(plugin);tickets.remove(c);}
+    private void hold(Location at){Set<Chunk> needed=new HashSet<>();int cx=at.getBlockX()>>4,cz=at.getBlockZ()>>4;for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++){Chunk c=at.getWorld().getChunkAt(cx+dx,cz+dz);needed.add(c);if(tickets.add(c))plugin.getChunkHolds().hold(c);}
+        for(Chunk c:new HashSet<>(tickets))if(!needed.contains(c)){plugin.getChunkHolds().release(c);tickets.remove(c);}
     }
     public void reloadModel() throws IOException {if(running())throw new IllegalArgumentException("운송을 먼저 stop 하세요.");WagonModel candidate=new WagonModel(plugin);stop();model=candidate;}
-    public void stop(){raid.clear();railMode=false;railShapes=Map.of();if(task!=null){task.cancel();task=null;}runningRoute=null;displays.forEach(Entity::remove);displays.clear();for(Chunk c:tickets)c.removePluginChunkTicket(plugin);tickets.clear();current=null;}
+    public void stop(){raid.clear();railMode=false;railShapes=Map.of();if(task!=null){task.cancel();task=null;}runningRoute=null;displays.forEach(Entity::remove);displays.clear();for(Chunk c:tickets)plugin.getChunkHolds().release(c);tickets.clear();current=null;}
     public void shutdown(){stop();rewards.shutdown();}
     public int entityCount(){return displays.size();}
     private int damageStage=-1;

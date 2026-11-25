@@ -208,4 +208,49 @@ class ReplayFormatTest {
         assertTrue(buf.segments().stream().anyMatch(s -> s.startTick <= buf.windowStart()), "그 장면을 가진 구간이 남아 있음");
         buf.clear(); store.release(h);
     }
+
+    @Test void killcamIsAShortSeparateClip() {
+        ChunkStore store = new ChunkStore();
+        String h = store.put(packet(39, 50));
+        PlayerBuffer buf = new PlayerBuffer(1200, 20 * 60 * 15);
+        long now = 0;
+        for (int i = 0; i < 4; i++) { buf.startSegment(seg(store, now, h, 600)); now += 600; buf.purge(now); } // 2400
+        buf.highlight("PvP", now - 1200, now + 2000, null);       // 진행 중인 싸움
+        buf.requestExtra("킬캠", now - 300, now + 60, new PlayerBuffer.Marker(now, 0xAA0000, "처치", null, 0, 0, 0));
+        assertFalse(buf.extraDue(now + 59));
+        buf.startSegment(seg(store, now, h, 60)); now += 60;
+        assertTrue(buf.extraDue(now));
+        buf.startSegment(seg(store, now, h, 0));                   // 호출 쪽이 닫음
+        var clips = buf.takeExtras(now);
+        assertEquals(1, clips.size());
+        var k = clips.getFirst();
+        assertEquals(Set.of("킬캠"), k.labels());
+        assertTrue(k.startTick() <= 2100 && k.endTick() == 2460, k.startTick() + "~" + k.endTick());
+        assertTrue(buf.recording(), "싸움 창은 그대로");
+        // 연달아 죽이면 한 킬캠으로
+        buf.requestExtra("킬캠", now - 300, now + 60, null);
+        buf.requestExtra("킬캠", now - 200, now + 100, null);
+        buf.startSegment(seg(store, now, h, 100)); now += 100;
+        buf.startSegment(seg(store, now, h, 0));
+        var merged = buf.takeExtras(now);
+        assertEquals(1, merged.size(), "겹친 킬캠은 하나");
+        merged.forEach(PlayerBuffer.Clip::done);
+        k.done(); buf.clear(); store.release(h);
+    }
+
+    @Test void edlMarkersMatchVideoTime() throws Exception {
+        String edl = EditBundle.edl("PvP - A", List.of(new ReplayArchive.Marker(200, 0xFF3333, "싸움 시작: A → B", null, 0, 0, 0),
+                new ReplayArchive.Marker(1210, 0x33AAFF, "KOTH | 끝", null, 0, 0, 0)), 60);
+        assertTrue(edl.startsWith("TITLE: PvP - A\r\nFCM: NON-DROP FRAME"));
+        assertTrue(edl.contains("01:00:10:00 01:00:10:01"), "200틱 = 10초 → 01:00:10:00\n" + edl);
+        assertTrue(edl.contains("01:01:00:30"), "1210틱 = 60.5초");
+        assertTrue(edl.contains("|C:ResolveColorRed |M:싸움 시작: A → B |D:1"));
+        assertTrue(edl.contains("|M:KOTH / 끝"), "| 는 바꿈");
+        EditBundle.appendIndex(dir, "2026-11-25 12:00:00", "120000_pvp_A.zip", "PvP", "A", 68, 2);
+        EditBundle.appendIndex(dir, "2026-11-25 12:01:00", "120100_koth_B.zip", "KOTH, 1", "=B", 30, 0);
+        var lines = java.nio.file.Files.readAllLines(dir.resolve("index.csv"));
+        assertEquals(3, lines.size());
+        assertTrue(lines.get(0).endsWith(EditBundle.INDEX_HEADER));
+        assertTrue(lines.get(2).contains("\"KOTH, 1\",'=B"), lines.get(2));
+    }
 }

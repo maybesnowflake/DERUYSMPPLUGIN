@@ -177,6 +177,7 @@ public class SupplyDropManager implements GameEvent {
                 if (block.getRelative(face).getType() == Material.CHEST) nextToChest = true;
             if (nextToChest) continue;
             block.setType(Material.CHEST);
+            com.deruy.plugin.replay.ReplayService.blockChanged(plugin, block); // 녹화 카메라에 상자 등장 알림
             List<ItemStack> rolled = plugin.getSupplyChestRegistry().rollRewards(plugin.getConfig().getStringList(rewardPath), plugin.getLogger());
             plugin.getSupplyChestRegistry().register(block.getLocation(), rolled);
             return true;
