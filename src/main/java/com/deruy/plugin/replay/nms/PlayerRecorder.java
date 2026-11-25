@@ -42,7 +42,7 @@ import java.util.*;
  * 한 플레이어 시점의 서버 쪽 녹화기 (서버 스레드 전용, PacketTap 이 모은 패킷을 매 틱 비운다).
  * 구간마다 "그 시점 화면 상태" 스냅샷을 서버 상태로 직접 만들어서, 버퍼 어디서부터든 Flashback 이 재생할 수 있게 한다.
  */
-public final class PlayerRecorder {
+public final class PlayerRecorder implements com.deruy.plugin.replay.buffer.Recorder {
     private record Pos(double x, double y, double z, float yaw, float pitch, float head, boolean onGround) {}
     private static final class ChunkEntry { String hash; boolean dirty; }
     private static final class Boss { byte[] add; final LinkedHashMap<String, byte[]> updates = new LinkedHashMap<>(); }
@@ -87,18 +87,19 @@ public final class PlayerRecorder {
         pipeline.addAfter("encoder", PacketTap.NAME, tap);
     }
 
-    public PlayerBuffer buffer() { return buffer; }
+    @Override public String name() { return name; }
+    @Override public PlayerBuffer buffer() { return buffer; }
     public Player player() { return bukkit; }
-    public String stoppedReason() { return stoppedReason; }
-    public boolean alive() { return stoppedReason == null; }
+    @Override public String stoppedReason() { return stoppedReason; }
+    @Override public boolean alive() { return stoppedReason == null; }
 
     public void swing(boolean mainHand) { if (mainHand) swingMain = true; else swingOff = true; }
 
-    /** 매 틱 (서버 스레드). 반환: 내보낼 Clip (없으면 null) */
-    public PlayerBuffer.Clip tick(long now) {
-        if (stoppedReason != null) return null;
-        if (!tap.active()) { stop("패킷 수집 중단: " + tap.failure()); return null; }
-        if (tap.configuring()) { drainDiscard(); needSnapshot = true; return null; }
+    /** 매 틱 (서버 스레드). 반환: 내보낼 클립들 */
+    @Override public List<PlayerBuffer.Clip> tick(long now) {
+        if (stoppedReason != null) return List.of();
+        if (!tap.active()) { stop("패킷 수집 중단: " + tap.failure()); return List.of(); }
+        if (tap.configuring()) { drainDiscard(); needSnapshot = true; return List.of(); }
 
         Segment seg = buffer.current();
         if (seg != null && !needSnapshot) drain(seg); else drainDiscard();
@@ -110,13 +111,15 @@ public final class PlayerRecorder {
         writePositions(seg);
         seg.nextTick();
 
-        PlayerBuffer.Clip clip = null;
-        if (buffer.exportDue(now + 1)) {
+        List<PlayerBuffer.Clip> clips = new ArrayList<>(1);
+        boolean window = buffer.exportDue(now + 1), extra = buffer.extraDue(now + 1);
+        if (window || extra) {
             startSegment(now + 1); // 지금까지를 닫고 새 스냅샷으로 이어감
-            clip = buffer.takeClip(now + 1);
+            if (extra) clips.addAll(buffer.takeExtras(now + 1));
+            if (window) { PlayerBuffer.Clip c = buffer.takeClip(now + 1); if (c != null) clips.add(c); }
         }
         buffer.purge(now + 1);
-        return clip;
+        return clips;
     }
 
     private void drainDiscard() { while (tap.poll() != null) { } }
@@ -360,7 +363,7 @@ public final class PlayerRecorder {
 
     // ---------------------------------------------------------------- 정리
 
-    public void stop(String reason) {
+    @Override public void stop(String reason) {
         if (stoppedReason != null) return;
         stoppedReason = reason;
         tap.stop();
@@ -370,18 +373,22 @@ public final class PlayerRecorder {
         } catch (RuntimeException ignored) { }
     }
 
-    /** 나갈 때: 진행 중인 하이라이트가 있으면 그때까지를 Clip 으로 */
-    public PlayerBuffer.Clip finish(long now) {
-        PlayerBuffer.Clip clip = null;
-        if (stoppedReason == null && buffer.recording() && buffer.current() != null) {
-            buffer.highlight("퇴장", now, now, null);
+    /** 나갈 때: 진행 중인 하이라이트·킬캠이 있으면 그때까지를 클립으로 */
+    @Override public List<PlayerBuffer.Clip> finish(long now) {
+        List<PlayerBuffer.Clip> clips = new ArrayList<>();
+        if (stoppedReason == null && buffer.current() != null && (buffer.recording() || buffer.hasExtras())) {
             buffer.current().close();
-            clip = buffer.takeClip(now);
+            clips.addAll(buffer.takeExtras(Long.MAX_VALUE));
+            if (buffer.recording()) {
+                buffer.highlight("퇴장", now, now, null);
+                PlayerBuffer.Clip c = buffer.takeClip(now);
+                if (c != null) clips.add(c);
+            }
         }
         stop("퇴장");
         clearChunks();
-        return clip;
+        return clips;
     }
 
-    public void release() { buffer.clear(); clearChunks(); }
+    @Override public void release() { buffer.clear(); clearChunks(); }
 }

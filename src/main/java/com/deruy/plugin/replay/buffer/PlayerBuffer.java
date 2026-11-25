@@ -23,6 +23,13 @@ public final class PlayerBuffer {
         boolean continued;
     }
 
+    /** 하이라이트 창과 별개인 짧은 클립(킬캠 등): from~until 이 지나면 따로 저장 */
+    private static final class Extra {
+        final String label; final long from; long until; final List<Marker> markers = new ArrayList<>();
+        Extra(String label, long from, long until) { this.label = label; this.from = from; this.until = until; }
+    }
+    private final List<Extra> extras = new ArrayList<>();
+
     private final Deque<Segment> segments = new ArrayDeque<>();
     private final int preRollTicks;
     private final int maxClipTicks;
@@ -42,6 +49,7 @@ public final class PlayerBuffer {
     public Segment current() { return segments.peekLast(); }
     public Collection<Segment> segments() { return Collections.unmodifiableCollection(segments); }
     public boolean recording() { return window != null; }
+    public boolean hasExtras() { return !extras.isEmpty(); }
     public Set<String> labels() { return window == null ? Set.of() : Collections.unmodifiableSet(window.labels); }
     public long windowStart() { return window == null ? -1 : window.start; }
     public long windowEnd() { return window == null ? -1 : window.end; }
@@ -68,6 +76,43 @@ public final class PlayerBuffer {
     private long oldestTick() {
         Segment s = segments.peekFirst();
         return s == null ? Long.MIN_VALUE : s.startTick;
+    }
+
+    /** 짧은 클립 요청 (창과 무관하게 그 범위만) */
+    public void requestExtra(String label, long from, long until, Marker marker) {
+        // 같은 종류가 겹치면(연달아 킬 등) 한 클립으로 늘린다
+        for (Extra e : extras) {
+            if (e.label.equals(label) && from <= e.until) {
+                e.until = Math.max(e.until, until);
+                if (marker != null) e.markers.add(marker);
+                return;
+            }
+        }
+        Extra e = new Extra(label, Math.max(from, oldestTick()), until);
+        if (marker != null) e.markers.add(marker);
+        extras.add(e);
+    }
+
+    public boolean extraDue(long now) {
+        for (Extra e : extras) if (now >= e.until) return true;
+        return false;
+    }
+
+    /** 끝난 짧은 클립들 (호출 전에 구간을 새로 시작해 지금까지를 닫아 둘 것) */
+    public List<Clip> takeExtras(long now) {
+        List<Clip> out = new ArrayList<>();
+        for (Iterator<Extra> it = extras.iterator(); it.hasNext(); ) {
+            Extra e = it.next();
+            if (now < e.until) continue;
+            it.remove();
+            List<Segment> parts = new ArrayList<>();
+            for (Segment s : segments) if (s.closed() && s.endTick() > e.from && s.startTick < e.until) parts.add(s);
+            if (parts.isEmpty()) continue;
+            parts.forEach(Segment::acquireExtra);
+            out.add(new Clip(new LinkedHashSet<>(List.of(e.label)), parts, parts.getFirst().startTick,
+                    Math.min(e.until, parts.getLast().endTick()), List.copyOf(e.markers), false));
+        }
+        return out;
     }
 
     /** 지금 내보낼 차례인가 (끝났거나 최대 길이를 넘음). true 면 호출 쪽이 구간을 새로 시작한 뒤 takeClip() */
@@ -111,6 +156,7 @@ public final class PlayerBuffer {
     public void purge(long now) {
         // 녹화 중이어도 기본 되감기 분량은 남겨 둔다 (곧 PvP 가 더 이른 시작점을 요청할 수 있음)
         long keepFrom = window != null ? Math.min(window.start, now - preRollTicks) : now - preRollTicks;
+        for (Extra e : extras) keepFrom = Math.min(keepFrom, e.from);
         while (segments.size() > 1) {
             Iterator<Segment> it = segments.iterator();
             it.next();
@@ -124,6 +170,7 @@ public final class PlayerBuffer {
         for (Segment s : segments) s.release();
         segments.clear();
         window = null;
+        extras.clear();
     }
 
     public long memoryBytes() {

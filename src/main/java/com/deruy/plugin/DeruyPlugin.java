@@ -290,6 +290,9 @@ public class DeruyPlugin extends JavaPlugin {
         var deruyCmd = new com.deruy.plugin.misc.commands.DeruyCommand(this);
         getCommand("deruy").setExecutor(deruyCmd);
         getCommand("deruy").setTabCompleter(deruyCmd);
+        var cameraCmd = new com.deruy.plugin.replay.CameraCommand(this);
+        getCommand("camera").setExecutor(cameraCmd);
+        getCommand("camera").setTabCompleter(cameraCmd);
 
         var autotuneCmd = new AutotuneCommand(this);
         getCommand("autotune").setExecutor(autotuneCmd);

@@ -621,9 +621,19 @@ replay:
   max-disk-gb: 20            # 폴더 용량 상한(넘으면 오래된 파일부터 삭제)
   max-queued-packets: 50000  # 한 사람 패킷이 이만큼 밀리면 그 사람 녹화만 멈춤(서버 보호)
   marker-radius: 96          # 킬·보물·점령 같은 순간을 근처 녹화 파일에 마커로
+  edl-fps: 60                # 리플레이 옆 Resolve 마커(.edl)의 프레임 수 — 영상 내보낼 때 fps 와 맞출 것
   pvp:
+    trigger: both            # hit(때릴 때) / combat-tag(라이프스틸 전투 태그 동안) / both
     before-seconds: 60       # 때리기 전 보여 줄 시간
     end-after-seconds: 15    # 마지막 타격 뒤 이만큼 아무도 안 때리면 싸움 끝
+  killcam:
+    enabled: true            # 플레이어에게 죽으면 죽은 사람·죽인 사람 시점 짧은 파일 따로
+    before-seconds: 15
+    after-seconds: 3
+  follow:                    # 움직이는 대상을 따라가는 카메라 (플레이어 없어도 녹화)
+    transport: true          # 하트 운송전 열차
+    dragon: true             # 엔더 드래곤 (플레이어가 때리면 시작, 2분 조용하거나 죽으면 끝)
+    radius: 48
   events:
     random-event: true       # 랜덤 이벤트 동안 전원
     transport: true          # 하트 운송전 동안 열차 근처
@@ -632,3 +642,6 @@ replay:
     koth-radius: 48
     supply-drop: true        # 보급 동안 상자 근처
     supply-radius: 32
+    dragon: true             # 엔더 드래곤 싸움 동안 근처
+    dragon-radius: 128
+  # 고정 카메라는 게임 안에서 /camera <이벤트> <이름> [반경] 으로 등록 (data.yml replay-cameras 에 저장)
